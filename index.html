@@ -46,8 +46,8 @@
     .meta-item { padding:10px; border-left:1px solid var(--border); background:#f9fafb; }
     .meta-item:last-child{border-left:none;} .meta-item strong{display:block;color:var(--blue-dark);} 
     .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
-    .contract-text { white-space:normal; font-size:20px; line-height:1.45; }
-    .contract-text p { margin:0 0 8px 0; }
+    .contract-text { white-space:normal; font-size:22px; line-height:1.32; }
+    .contract-text p { margin:0 0 5px 0; }
     .contract-text p:last-child { margin-bottom:0; }
     .sign-area { margin-top:16px; border:2px dashed var(--border); border-radius:14px; padding:12px; background:#fbfdff; }
     #signatureCanvas { width:100%; height:210px; border:1px solid #cbd5e1; border-radius:12px; background:white; touch-action:none; }
@@ -77,8 +77,8 @@
     .pdf-table { width:100%; border-collapse:collapse; margin-bottom:12px; table-layout:fixed; }
     .pdf-table th { background:#f3f4f6; color:var(--blue-dark); border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; }
     .pdf-table td { border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; word-break:break-word; }
-    .pdf-contract-text { white-space:normal; font-size:18px; line-height:1.45; }
-    .pdf-contract-text p { margin:0 0 7px 0; }
+    .pdf-contract-text { white-space:normal; font-size:20px; line-height:1.32; }
+    .pdf-contract-text p { margin:0 0 5px 0; }
     .pdf-contract-text p:last-child { margin-bottom:0; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .pdf-signature img { width:260px; height:auto; display:block; margin-top:8px; }
@@ -86,7 +86,7 @@
     .ltr { direction:ltr; unicode-bidi:embed; word-break:break-all; text-align:left; }
     @media (max-width:950px){ .grid{grid-template-columns:1fr;} .contract-meta{grid-template-columns:1fr;} .meta-item{border-left:none;border-bottom:1px solid var(--border);} .meta-item:last-child{border-bottom:none;} .page{padding:14px;} }
 
-    /* גרסה 32 - הגדלת וצמצום עיקרי ההסכם והוספת סעיף תקופת השכירות */
+    /* גרסה 33 - חישוב חודשי שכירות מעוגל, הגדלת עיקרי ההסכם והוספת סעיפים 3-4 */
     .tabs, #adminPanel { display:none !important; }
     body.signer-only #signerPanel { display:grid !important; }
     @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
@@ -385,8 +385,19 @@ function calculateRentalMonths(startDate,endDate){
   const s=new Date(startDate+'T00:00:00');
   const e=new Date(endDate+'T00:00:00');
   if(Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return '';
+
   let months=(e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth());
-  if(e.getDate() >= s.getDate()) months += 1;
+  const anniversary=new Date(s);
+  anniversary.setMonth(anniversary.getMonth()+months);
+
+  if(e < anniversary){
+    months -= 1;
+  } else {
+    const daysAfter=Math.floor((e-anniversary)/(1000*60*60*24));
+    // אם תקופת החוזה חורגת מהחודש המלא עד 5 ימים, מעגלים למטה ולא מוסיפים חודש.
+    if(daysAfter > 5) months += 1;
+  }
+
   return String(Math.max(months,1));
 }
 function val(id){return document.getElementById(id)?.value?.trim() || '';} 
@@ -873,7 +884,23 @@ function buildContractText(d){
 
 2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${formatDate(d.startDate)} עד תאריך ${formatDate(d.endDate)}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.
 
-2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.`;
+2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.
+
+3. אי תכולת חוק הגנת הדיור
+
+3.1 הצדדים מסכימים בזה כי השכירות האמורה לא תהיה מוגנת עפ"י חוק הגנת הדייר נוסח משולב (התשל"ב 1972), להלן "חוק הגנת הדייר".
+
+3.2 המשכיר מצהיר שהחדר פנוי מכל אדם.
+
+4. הצהרות השוכר
+
+4.1 השוכר מצהיר כי לא שילם כל דמי מפתח ולא נתן תמורה אחרת מכל סוג תמורת הדירה, והוא מודע כי השכירות הזו לא תהיה מוגנת עפ"י חוק הגנת הדייר.
+
+4.2 מטרת השכירות היא שימוש לצורכי מגורים בלבד, ללא הכנסת חיות מחמד ולא לכל מטרה אחרת.
+
+4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.
+
+4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.`;
 }
 function buildContractHtml(d){
   const roomName=escapeHtml(getAgreementRoomName(d));
@@ -889,7 +916,15 @@ function buildContractHtml(d){
     <p>הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>
     <p><strong>2. תקופת השכירות</strong></p>
     <p>2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${start} עד תאריך ${end}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
-    <p>2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.</p>`;
+    <p>2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.</p>
+    <p><strong>3. אי תכולת חוק הגנת הדיור</strong></p>
+    <p>3.1 הצדדים מסכימים בזה כי השכירות האמורה לא תהיה מוגנת עפ"י חוק הגנת הדייר נוסח משולב (התשל"ב 1972), להלן "חוק הגנת הדייר".</p>
+    <p>3.2 המשכיר מצהיר שהחדר פנוי מכל אדם.</p>
+    <p><strong>4. הצהרות השוכר</strong></p>
+    <p>4.1 השוכר מצהיר כי לא שילם כל דמי מפתח ולא נתן תמורה אחרת מכל סוג תמורת הדירה, והוא מודע כי השכירות הזו לא תהיה מוגנת עפ"י חוק הגנת הדייר.</p>
+    <p>4.2 מטרת השכירות היא שימוש לצורכי מגורים בלבד, ללא הכנסת חיות מחמד ולא לכל מטרה אחרת.</p>
+    <p>4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.</p>
+    <p>4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.</p>`;
 }
 function refreshContract(){
   const d=getSignerData();
