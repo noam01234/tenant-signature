@@ -685,32 +685,51 @@ async function loadDataFromUrl(){
   const params=new URLSearchParams(location.search);
   if(params.get('mode')!=='sign') return false;
 
+  // תמיכה גם בקישורים הישנים עם cfg/data וגם בקישור החדש והקצר:
+  // ?mode=sign&id=123&sb=https://...supabase.co&key=...&bucket=signed-contracts&table=tenant_signatures
   const linkData=parseJsonParam(params, 'data');
-  const cfg=parseJsonParam(params, 'cfg') || {};
+  const legacyCfg=parseJsonParam(params, 'cfg') || {};
+  const simpleCfg={
+    pendingSignatureId: params.get('id') || '',
+    supabaseUrl: params.get('sb') || params.get('supabaseUrl') || '',
+    supabaseAnonKey: params.get('key') || params.get('anon') || params.get('supabaseAnonKey') || '',
+    supabaseBucket: params.get('bucket') || '',
+    supabaseTable: params.get('table') || ''
+  };
+  const cfg={...legacyCfg, ...Object.fromEntries(Object.entries(simpleCfg).filter(([,v])=>v))};
   const pendingId=params.get('id') || cfg.pendingSignatureId || linkData?.pendingSignatureId || '';
 
   let data = linkData ? { ...linkData, pendingSignatureId: pendingId || linkData.pendingSignatureId } : null;
 
-  // ננסה להעשיר/לעדכן את הנתונים מהרשומה ב־Supabase.
-  // אם זה נכשל, לא נזרוק את כל הטופס — נמשיך עם הנתונים שהגיעו בקישור.
-  if(pendingId){
-    try{
-      const rowData=await fetchPendingSignatureDataFromSupabase(pendingId, { ...data, ...cfg, pendingSignatureId: pendingId });
-      if(rowData){
-        data = { ...(data || {}), ...rowData, pendingSignatureId: pendingId };
-      }
-    }catch(e){
-      console.warn('לא הצלחתי למשוך נתוני חוזה מ־Supabase, משתמש בנתונים שבקישור:', e);
-      if(!data){
-        showStatus('טעינת פרטי החוזה מ־Supabase נכשלה: '+(e?.message || String(e)), 'error');
-        return false;
-      }
+  if(!pendingId){
+    showStatus('הקישור חסר מזהה חוזה. יש ליצור קישור חתימה חדש מהמערכת הראשית.', 'error');
+    return false;
+  }
+
+  if(!cfg.supabaseAnonKey){
+    showStatus('הקישור חסר Supabase Publishable Key. יש לשמור את ההגדרות במערכת הראשית וליצור קישור חדש.', 'error');
+    return false;
+  }
+
+  // קודם ננסה למשוך את כל פרטי החוזה מ־Supabase לפי מזהה הרשומה.
+  try{
+    const rowData=await fetchPendingSignatureDataFromSupabase(pendingId, { ...data, ...cfg, pendingSignatureId: pendingId });
+    if(rowData){
+      data = { ...(data || {}), ...rowData, pendingSignatureId: pendingId };
+    }
+  }catch(e){
+    console.warn('לא הצלחתי למשוך נתוני חוזה מ־Supabase:', e);
+    if(!data){
+      showStatus('לא הצלחתי לטעון את פרטי החוזה מ־Supabase. פרטי שגיאה: '+(e?.message || String(e)), 'error');
+      return false;
     }
   }
 
-  if(!data) return false;
+  if(!data){
+    showStatus('לא נמצאו פרטי חוזה. יש ליצור קישור חדש מהמערכת הראשית.', 'error');
+    return false;
+  }
 
-  // ודאות שהגדרות Supabase מה־cfg נשמרות גם אם נתוני החוזה הגיעו מהקישור.
   data.supabaseUrl = data.supabaseUrl || cfg.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co';
   data.supabaseAnonKey = data.supabaseAnonKey || cfg.supabaseAnonKey || '';
   data.supabaseBucket = data.supabaseBucket || cfg.supabaseBucket || 'signed-contracts';
