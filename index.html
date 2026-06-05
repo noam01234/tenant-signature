@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>חוזה חתימה - v31</title>
+  <title>חוזה חתימה - v32</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -46,7 +46,9 @@
     .meta-item { padding:10px; border-left:1px solid var(--border); background:#f9fafb; }
     .meta-item:last-child{border-left:none;} .meta-item strong{display:block;color:var(--blue-dark);} 
     .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
-    .contract-text { white-space:pre-line; font-size:17px; line-height:1.75; }
+    .contract-text { white-space:normal; font-size:20px; line-height:1.45; }
+    .contract-text p { margin:0 0 8px 0; }
+    .contract-text p:last-child { margin-bottom:0; }
     .sign-area { margin-top:16px; border:2px dashed var(--border); border-radius:14px; padding:12px; background:#fbfdff; }
     #signatureCanvas { width:100%; height:210px; border:1px solid #cbd5e1; border-radius:12px; background:white; touch-action:none; }
     .checkbox-line { display:flex; gap:10px; align-items:flex-start; margin:12px 0; font-weight:bold; }
@@ -75,14 +77,16 @@
     .pdf-table { width:100%; border-collapse:collapse; margin-bottom:12px; table-layout:fixed; }
     .pdf-table th { background:#f3f4f6; color:var(--blue-dark); border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; }
     .pdf-table td { border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; word-break:break-word; }
-    .pdf-contract-text { white-space:pre-line; font-size:17px; line-height:1.75; }
+    .pdf-contract-text { white-space:normal; font-size:18px; line-height:1.45; }
+    .pdf-contract-text p { margin:0 0 7px 0; }
+    .pdf-contract-text p:last-child { margin-bottom:0; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .pdf-signature img { width:260px; height:auto; display:block; margin-top:8px; }
     .pdf-audit { font-size:13px; margin-top:12px; background:#f9fafb; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .ltr { direction:ltr; unicode-bidi:embed; word-break:break-all; text-align:left; }
     @media (max-width:950px){ .grid{grid-template-columns:1fr;} .contract-meta{grid-template-columns:1fr;} .meta-item{border-left:none;border-bottom:1px solid var(--border);} .meta-item:last-child{border-bottom:none;} .page{padding:14px;} }
 
-    /* גרסה 31 - כותרת חוזה מספר, ניקוי פרטי מעקב והגדלת עיקרי ההסכם */
+    /* גרסה 32 - הגדלת וצמצום עיקרי ההסכם והוספת סעיף תקופת השכירות */
     .tabs, #adminPanel { display:none !important; }
     body.signer-only #signerPanel { display:grid !important; }
     @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
@@ -376,6 +380,15 @@ function generateContractNumber(){ return ''; }
 
 function addMonths(date,months){const d=new Date(date);d.setMonth(d.getMonth()+months);return d.toISOString().slice(0,10);} 
 function formatDate(dateStr){if(!dateStr)return ''; const p=dateStr.split('-'); return `${p[2]}/${p[1]}/${p[0]}`;}
+function calculateRentalMonths(startDate,endDate){
+  if(!startDate || !endDate) return '';
+  const s=new Date(startDate+'T00:00:00');
+  const e=new Date(endDate+'T00:00:00');
+  if(Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return '';
+  let months=(e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth());
+  if(e.getDate() >= s.getDate()) months += 1;
+  return String(Math.max(months,1));
+}
 function val(id){return document.getElementById(id)?.value?.trim() || '';} 
 function setVal(id,value){const el=document.getElementById(id); if(el) el.value=value ?? '';}
 function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
@@ -843,6 +856,7 @@ function getAgreementRoomName(d){
 }
 function buildContractText(d){
   const roomName=getAgreementRoomName(d);
+  const rentalMonths=calculateRentalMonths(d.startDate,d.endDate) || '___';
   return `בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".
 
 הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.
@@ -853,17 +867,29 @@ function buildContractText(d){
 
 המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.
 
-הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.`;
+הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.
+
+2. תקופת השכירות
+
+2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${formatDate(d.startDate)} עד תאריך ${formatDate(d.endDate)}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.
+
+2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.`;
 }
 function buildContractHtml(d){
   const roomName=escapeHtml(getAgreementRoomName(d));
+  const rentalMonths=escapeHtml(calculateRentalMonths(d.startDate,d.endDate) || '___');
+  const start=escapeHtml(formatDate(d.startDate));
+  const end=escapeHtml(formatDate(d.endDate));
   return `
     <p>בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".</p>
     <p>הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.</p>
     <p><strong>אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:</strong></p>
     <p><strong>1. מבוא</strong></p>
     <p>המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.</p>
-    <p>הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>`;
+    <p>הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>
+    <p><strong>2. תקופת השכירות</strong></p>
+    <p>2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${start} עד תאריך ${end}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
+    <p>2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.</p>`;
 }
 function refreshContract(){
   const d=getSignerData();
