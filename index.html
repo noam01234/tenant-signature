@@ -674,89 +674,132 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   };
 }
 
-function parseJsonParam(params, name){
-  const value=params.get(name);
-  if(!value) return null;
-  try{ return JSON.parse(b64DecodeUnicode(value)); }
-  catch(e){ console.error('שגיאה בפענוח פרמטר '+name, e); return null; }
+
+function normalizeB64Payload(value){
+  return String(value || '').trim().replace(/-/g, '+').replace(/_/g, '/');
 }
-
-async function loadDataFromUrl(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('mode')!=='sign') return false;
-
-  // תמיכה גם בקישורים הישנים עם cfg/data וגם בקישור החדש והקצר:
-  // ?mode=sign&id=123&sb=https://...supabase.co&key=...&bucket=signed-contracts&table=tenant_signatures
-  const linkData=parseJsonParam(params, 'data');
-  const legacyCfg=parseJsonParam(params, 'cfg') || {};
-  const simpleCfg={
-    pendingSignatureId: params.get('id') || '',
-    supabaseUrl: params.get('sb') || params.get('supabaseUrl') || '',
-    supabaseAnonKey: params.get('key') || params.get('anon') || params.get('supabaseAnonKey') || '',
-    supabaseBucket: params.get('bucket') || '',
-    supabaseTable: params.get('table') || ''
+function decodeJsonPayload(value){
+  if(!value) return null;
+  let raw=String(value).trim();
+  try{ raw=decodeURIComponent(raw); }catch(e){}
+  try{ return JSON.parse(b64DecodeUnicode(normalizeB64Payload(raw))); }
+  catch(e1){
+    try{ return JSON.parse(atob(normalizeB64Payload(raw))); }
+    catch(e2){ console.error('שגיאה בפענוח נתוני גיבוי מהקישור', e1, e2); return null; }
+  }
+}
+function collectUrlParams(){
+  const params=new URLSearchParams(location.search || '');
+  let hash=location.hash || '';
+  if(hash.startsWith('#')) hash=hash.slice(1);
+  if(hash.startsWith('?')) hash=hash.slice(1);
+  if(hash){
+    const hashParams=new URLSearchParams(hash);
+    hashParams.forEach((value,key)=>{
+      if(!params.has(key)) params.set(key,value);
+    });
+  }
+  return params;
+}
+function parseJsonParam(params, name){
+  return decodeJsonPayload(params.get(name));
+}
+function firstParam(params, names){
+  for(const name of names){
+    const value=params.get(name);
+    if(value) return value;
+  }
+  return '';
+}
+function buildConfigFromParams(params, linkData){
+  const cfg={
+    pendingSignatureId: firstParam(params, ['id','pendingSignatureId','recordId']) || linkData?.pendingSignatureId || '',
+    supabaseUrl: firstParam(params, ['sb','supabaseUrl']) || linkData?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co',
+    supabaseAnonKey: firstParam(params, ['key','anon','supabaseAnonKey']) || linkData?.supabaseAnonKey || '',
+    supabaseBucket: firstParam(params, ['bucket','supabaseBucket']) || linkData?.supabaseBucket || 'signed-contracts',
+    supabaseTable: firstParam(params, ['table','supabaseTable']) || linkData?.supabaseTable || 'tenant_signatures'
   };
-  const cfg={...legacyCfg, ...Object.fromEntries(Object.entries(simpleCfg).filter(([,v])=>v))};
-  const pendingId=params.get('id') || cfg.pendingSignatureId || linkData?.pendingSignatureId || '';
+  cfg.supabaseUrl=String(cfg.supabaseUrl || '').trim().replace(/\/$/, '');
+  cfg.supabaseAnonKey=String(cfg.supabaseAnonKey || '').trim();
+  cfg.supabaseBucket=String(cfg.supabaseBucket || 'signed-contracts').trim();
+  cfg.supabaseTable=String(cfg.supabaseTable || 'tenant_signatures').trim();
+  return cfg;
+}
+function dataHasUsefulContractFields(data){
+  return Boolean(data && (data.tenantName || data.tenantPhone || data.propertyAddress || data.building || data.apartment || data.room || data.contractNumber));
+}
+async function loadDataFromUrl(){
+  const params=collectUrlParams();
+  const mode=params.get('mode') || '';
+  const linkData=parseJsonParam(params, 'data') || parseJsonParam(params, 'd') || parseJsonParam(params, 'payload') || {};
+  const legacyCfg=parseJsonParam(params, 'cfg') || {};
+  const cfg={...legacyCfg, ...buildConfigFromParams(params, linkData)};
+  const pendingId=cfg.pendingSignatureId || linkData.pendingSignatureId || '';
 
-  let data = linkData ? { ...linkData, pendingSignatureId: pendingId || linkData.pendingSignatureId } : null;
+  let data = dataHasUsefulContractFields(linkData) ? { ...linkData, ...cfg, pendingSignatureId: pendingId } : null;
+  let fetchError='';
 
-  // אם קיימים נתוני גיבוי בקישור, נמלא מהם מיד את המסך.
-  // לאחר מכן ננסה למשוך נתונים עדכניים מ־Supabase ולדרוס רק אם הצלחנו.
   if(data){
-    data.supabaseUrl = data.supabaseUrl || cfg.supabaseUrl || '';
-    data.supabaseAnonKey = data.supabaseAnonKey || cfg.supabaseAnonKey || '';
-    data.supabaseBucket = data.supabaseBucket || cfg.supabaseBucket || 'signed-contracts';
-    data.supabaseTable = data.supabaseTable || cfg.supabaseTable || 'tenant_signatures';
-    data.pendingSignatureId = pendingId || data.pendingSignatureId || '';
     normalizePropertyAddress(data);
     await applyBaseData(data);
     setMode('signer');
+    showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
   }
 
-  if(!pendingId){
-    showStatus('הקישור חסר מזהה חוזה. יש ליצור קישור חתימה חדש מהמערכת הראשית.', 'error');
+  if(mode !== 'sign' && !pendingId && !data){
+    showStatus('לא זוהה קישור חתימה. יש לפתוח קישור שנוצר מתוך מערכת השוכרים.', 'error');
+    showDebug('URL ללא מצב חתימה.\nSearch: '+location.search+'\nHash: '+location.hash);
     return false;
   }
 
-  if(!cfg.supabaseAnonKey && !data?.supabaseAnonKey){
-    showStatus('הקישור חסר Supabase Publishable Key. יש לשמור את ההגדרות במערכת הראשית וליצור קישור חדש.', 'error');
-    showDebug('missing key\nurl='+location.href.slice(0,500));
-    return Boolean(data);
-  }
-
-  // קודם ננסה למשוך את כל פרטי החוזה מ־Supabase לפי מזהה הרשומה.
-  try{
-    const rowData=await fetchPendingSignatureDataFromSupabase(pendingId, { ...data, ...cfg, pendingSignatureId: pendingId });
-    if(rowData){
-      data = { ...(data || {}), ...rowData, pendingSignatureId: pendingId };
-    }
-  }catch(e){
-    console.warn('לא הצלחתי למשוך נתוני חוזה מ־Supabase:', e);
-    if(!data){
-      showStatus('לא הצלחתי לטעון את פרטי החוזה מ־Supabase. פרטי שגיאה: '+(e?.message || String(e)), 'error');
-      showDebug('Supabase fetch failed and no fallback data.\nPending ID: '+pendingId+'\nSupabase URL: '+(cfg.supabaseUrl||'')+'\nTable: '+(cfg.supabaseTable||'')+'\nError: '+(e?.message || String(e))+'\nURL: '+location.href.slice(0,900));
-      return false;
-    } else {
-      showStatus('פרטי החוזה נטענו מהקישור. הערה: לא הצלחתי למשוך עדכון מ־Supabase, אך אפשר לחתום ולשלוח.', '');
-      showDebug('Using fallback data from link.\nPending ID: '+pendingId+'\nSupabase fetch error: '+(e?.message || String(e)));
+  if(pendingId && cfg.supabaseAnonKey && cfg.supabaseUrl && window.supabase?.createClient){
+    try{
+      const rowData=await fetchPendingSignatureDataFromSupabase(pendingId, cfg);
+      if(rowData && dataHasUsefulContractFields(rowData)){
+        data={...(data || {}), ...rowData, pendingSignatureId: pendingId, ...cfg};
+        normalizePropertyAddress(data);
+        await applyBaseData(data);
+        setMode('signer');
+        showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+        return true;
+      }
+    }catch(e){
+      fetchError=e?.message || String(e);
+      console.warn('טעינת הרשומה מ־Supabase נכשלה:', e);
     }
   }
 
-  if(!data){
-    showStatus('לא נמצאו פרטי חוזה. יש ליצור קישור חדש מהמערכת הראשית.', 'error');
-    return false;
+  if(data && dataHasUsefulContractFields(data)){
+    data={...data, ...cfg, pendingSignatureId: pendingId || data.pendingSignatureId || ''};
+    normalizePropertyAddress(data);
+    await applyBaseData(data);
+    setMode('signer');
+    if(fetchError){
+      showStatus('פרטי החוזה נטענו מנתוני הגיבוי שבקישור. אפשר לחתום ולשלוח.', 'success');
+      showDebug('טעינת Supabase נכשלה אך נתוני גיבוי נמצאו.\nID: '+pendingId+'\nשגיאה: '+fetchError);
+    }else{
+      showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+    }
+    return true;
   }
 
-  data.supabaseUrl = data.supabaseUrl || cfg.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co';
-  data.supabaseAnonKey = data.supabaseAnonKey || cfg.supabaseAnonKey || '';
-  data.supabaseBucket = data.supabaseBucket || cfg.supabaseBucket || 'signed-contracts';
-  data.supabaseTable = data.supabaseTable || cfg.supabaseTable || 'tenant_signatures';
-  data.pendingSignatureId = pendingId || data.pendingSignatureId || '';
-
-  await applyBaseData(data);
+  showStatus('לא הצלחתי לטעון את פרטי החוזה. יש ליצור קישור חתימה חדש מתוך המערכת הראשית.', 'error');
+  showDebug(
+    'אבחון טעינת דף חתימה\n'+
+    'Mode: '+mode+'\n'+
+    'Pending ID: '+pendingId+'\n'+
+    'Supabase URL: '+(cfg.supabaseUrl||'')+'\n'+
+    'Table: '+(cfg.supabaseTable||'')+'\n'+
+    'Has key: '+Boolean(cfg.supabaseAnonKey)+'\n'+
+    'Has fallback data: '+Boolean(dataHasUsefulContractFields(linkData))+'\n'+
+    'Fallback keys: '+Object.keys(linkData||{}).join(', ')+'\n'+
+    'Fetch error: '+fetchError+'\n'+
+    'Search length: '+(location.search||'').length+'\n'+
+    'Hash length: '+(location.hash||'').length+'\n'+
+    'URL sample: '+location.href.slice(0,1200)
+  );
   setMode('signer');
-  return true;
+  return false;
 }
 function getSignerData(){
   const base={...currentBaseData};
@@ -1089,8 +1132,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   setVal('a_supabaseBucket', val('a_supabaseBucket') || 'signed-contracts');
   setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures');
   setVal('a_startDate',todayIso()); setVal('a_endDate',addMonths(new Date(),12)); previewAdminContract();
-  adminIds.forEach(id=>document.getElementById('a_'+id).addEventListener('input',previewAdminContract));
-  ['tenantId','homeAddress','tenantEmail','paymentMethod','tenantNotes'].forEach(id=>document.getElementById(id).addEventListener('input',refreshContract));
+  adminIds.forEach(id=>{ const el=document.getElementById('a_'+id); if(el) el.addEventListener('input',previewAdminContract); });
+  ['tenantId','homeAddress','tenantEmail','paymentMethod','tenantNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',refreshContract); });
   const loaded=await loadDataFromUrl();
   if(!loaded){
     setMode('signer');
