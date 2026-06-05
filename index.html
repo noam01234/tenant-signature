@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>חתימה על חוזה שכירות - v23</title>
+  <title>חתימה על חוזה שכירות - v29</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -41,6 +41,8 @@
     .contract-header { text-align:center; border-bottom:3px solid var(--blue); padding-bottom:12px; margin-bottom:16px; }
     .contract-header h2 { margin:0; font-size:25px; color:var(--blue-dark); }
     .contract-meta { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:16px 0; }
+    .property-meta { grid-template-columns:1fr 1fr; }
+    .contract-period { margin:14px 0 18px; padding:13px 16px; border:1px solid #bfdbfe; background:#eff6ff; color:var(--blue-dark); border-radius:12px; font-size:19px; font-weight:bold; text-align:center; }
     .meta-item { padding:10px; border-left:1px solid var(--border); background:#f9fafb; }
     .meta-item:last-child{border-left:none;} .meta-item strong{display:block;color:var(--blue-dark);} 
     .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
@@ -80,7 +82,7 @@
     .ltr { direction:ltr; unicode-bidi:embed; word-break:break-all; text-align:left; }
     @media (max-width:950px){ .grid{grid-template-columns:1fr;} .contract-meta{grid-template-columns:1fr;} .meta-item{border-left:none;border-bottom:1px solid var(--border);} .meta-item:last-child{border-bottom:none;} .page{padding:14px;} }
 
-    /* גרסה 25 - דף חתימה לשוכר בלבד: תיקון תצוגת טופס + שליחה פשוטה */
+    /* גרסה 29 - פרטי נכס מפוצלים ותקופת חוזה מודגשת */
     .tabs, #adminPanel { display:none !important; }
     body.signer-only #signerPanel { display:grid !important; }
     body.signer-only .topbar h1::after { content:' - דף שוכר'; font-size:18px; opacity:.9; }
@@ -262,7 +264,7 @@
         <div class="contract-meta">
           <div class="meta-item"><strong>כתובת</strong><span id="viewLandlordAddress"></span></div>
         </div>
-        <div class="section-title">פרטי השוכר והמושכר</div>
+        <div class="section-title">פרטי השוכר</div>
         <div class="contract-meta">
           <div class="meta-item"><strong>שם השוכר</strong><span id="viewTenantName"></span></div>
           <div class="meta-item"><strong>טלפון</strong><span id="viewTenantPhone"></span></div>
@@ -272,10 +274,12 @@
           <div class="meta-item"><strong>כתובת מגורים</strong><span id="viewHomeAddress"></span></div>
           <div class="meta-item"><strong>דואר אלקטרוני</strong><span id="viewTenantEmail"></span></div>
         </div>
-        <div class="contract-meta">
-          <div class="meta-item"><strong>כתובת הנכס</strong><span id="viewPropertyAddress"></span></div>
-          <div class="meta-item"><strong>תקופת שכירות</strong><span id="viewDates"></span></div>
+        <div class="section-title">פרטי הנכס</div>
+        <div class="contract-meta property-meta">
+          <div class="meta-item"><strong>כתובת הנכס</strong><span id="viewPropertyBaseAddress"></span></div>
+          <div class="meta-item"><strong>פרטי החדר</strong><span id="viewRoomDetails"></span></div>
         </div>
+        <div class="contract-period" id="viewContractPeriod"></div>
         <div class="section-title">עיקרי ההסכם</div>
         <div class="contract-text" id="contractText"></div>
         <div class="section-title">חתימת השוכר</div>
@@ -382,19 +386,33 @@ function setVal(id,value){const el=document.getElementById(id); if(el) el.value=
 function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
 function b64EncodeUnicode(str){return btoa(unescape(encodeURIComponent(str)));}
 function b64DecodeUnicode(str){return decodeURIComponent(escape(atob(str)));}
-function buildSignerPropertyAddress(building, apartment, room){
-  const b=String(building||'').trim();
+function isStudioUnit(apartment, room){
   const a=String(apartment||'').trim();
   const r=String(room||'').trim();
-  if(a==='סטודיו' || r==='סטודיו') return b ? `נווה שאנן ${b} אריאל, דירת סטודיו` : 'נווה שאנן אריאל, דירת סטודיו';
+  return a==='סטודיו' || r==='סטודיו';
+}
+function buildPropertyBaseAddress(building){
+  const b=String(building||'').trim();
+  return b ? `נווה שאנן ${b} אריאל` : 'נווה שאנן אריאל';
+}
+function buildRoomDetails(apartment, room){
+  const a=String(apartment||'').trim();
+  const r=String(room||'').trim();
+  if(isStudioUnit(a, r)) return 'דירת סטודיו';
   const parts=[];
-  parts.push(b ? `נווה שאנן ${b} אריאל` : 'נווה שאנן אריאל');
   if(a) parts.push(`קומה ${a}`);
-  if(r) parts.push(`חדר ${r}`);
-  return parts.join(', ');
+  if(r) parts.push(r);
+  return parts.join(' ');
+}
+function buildSignerPropertyAddress(building, apartment, room){
+  const base=buildPropertyBaseAddress(building);
+  const details=buildRoomDetails(apartment, room);
+  return [base, details].filter(Boolean).join(', ');
 }
 function normalizePropertyAddress(data){
   if(!data) return '';
+  data.propertyBaseAddress = data.propertyBaseAddress || buildPropertyBaseAddress(data.building);
+  data.roomDetails = data.roomDetails || buildRoomDetails(data.apartment, data.room);
   const generated=buildSignerPropertyAddress(data.building, data.apartment, data.room);
   data.propertyAddress = generated || data.propertyAddress || '';
   return data.propertyAddress;
@@ -825,7 +843,7 @@ function buildContractText(d){ return `מספר חוזה: ${d.contractNumber || 
 
 פרטי המשכיר: ${d.landlordFullName || ''}, ת.ז. ${d.landlordId || ''}, כתובת: ${d.landlordAddress || ''}, טלפון: ${d.landlordPhone || ''}.
 
-1. המשכיר משכיר לשוכר את המושכר המפורט לעיל לתקופת השכירות הרשומה בחוזה זה.
+1. המשכיר משכיר לשוכר את הנכס בכתובת ${d.propertyBaseAddress || d.propertyAddress || ''}, ${d.roomDetails || ''}, לתקופת השכירות הרשומה בחוזה זה.
 
 2. דמי השכירות החודשיים יהיו בסך ${d.rentAmount || ''} ₪ וישולמו בכל חודש במועד שיוסכם בין הצדדים.
 
@@ -856,7 +874,9 @@ function refreshContract(){
   const vla=document.getElementById('viewLandlordAddress'); if(vla) vla.innerText=d.landlordAddress||'';
   document.getElementById('viewTenantName').innerText=d.tenantName||''; document.getElementById('viewTenantPhone').innerText=d.tenantPhone||''; document.getElementById('viewTenantId').innerText=d.tenantId||'טרם מולא';
   document.getElementById('viewHomeAddress').innerText=d.homeAddress||'טרם מולא'; document.getElementById('viewTenantEmail').innerText=d.tenantEmail||'טרם מולא';
-  document.getElementById('viewPropertyAddress').innerText=d.propertyAddress||''; document.getElementById('viewDates').innerText=`${formatDate(d.startDate)} עד ${formatDate(d.endDate)}`;
+  const propertyBaseEl=document.getElementById('viewPropertyBaseAddress'); if(propertyBaseEl) propertyBaseEl.innerText=d.propertyBaseAddress||'';
+  const roomDetailsEl=document.getElementById('viewRoomDetails'); if(roomDetailsEl) roomDetailsEl.innerText=d.roomDetails||'';
+  const periodEl=document.getElementById('viewContractPeriod'); if(periodEl) periodEl.innerText=`תקופת החוזה: ${formatDate(d.startDate)} עד ${formatDate(d.endDate)}`;
   document.getElementById('contractText').innerText=buildContractText(d);
   validateRequiredFields(false);
 }
@@ -904,7 +924,8 @@ function buildPdfRenderElement(){
   <table class="pdf-table"><tr><th>כתובת המשכיר</th></tr><tr><td>${escapeHtml(d.landlordAddress||'')}</td></tr></table>
   <div class="pdf-section-title">פרטי השוכר</div><table class="pdf-table"><tr><th>שם השוכר</th><th>טלפון</th><th>תעודת זהות</th></tr><tr><td>${escapeHtml(d.tenantName)}</td><td>${escapeHtml(d.tenantPhone)}</td><td>${escapeHtml(d.tenantId)}</td></tr></table>
   <table class="pdf-table"><tr><th>כתובת מגורים</th><th>דואר אלקטרוני</th></tr><tr><td>${escapeHtml(d.homeAddress)}</td><td>${escapeHtml(d.tenantEmail)}</td></tr></table>
-  <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>תקופת שכירות</th></tr><tr><td>${escapeHtml(d.propertyAddress)}</td><td>${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</td></tr></table>
+  <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>פרטי החדר</th></tr><tr><td>${escapeHtml(d.propertyBaseAddress || '')}</td><td>${escapeHtml(d.roomDetails || '')}</td></tr></table>
+  <div style="font-size:18px;font-weight:bold;color:#0a355c;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;text-align:center;margin:8px 0 12px;">תקופת החוזה: ${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</div>
   <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th><th>אמצעי תשלום</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td><td>${escapeHtml(d.paymentMethod)}</td></tr></table>
   <div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text">${escapeHtml(buildContractText(d))}</div>
   <div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
@@ -1109,7 +1130,7 @@ async function copySignatureDetails(){
     return;
   }
   const d=lastSignatureData;
-  const details=`פרטי חתימה על חוזה שכירות\nשם: ${d.tenantName||''}\nטלפון: ${d.tenantPhone||''}\nתעודת זהות: ${d.tenantId||''}\nכתובת מגורים: ${d.homeAddress||''}\nאימייל: ${d.tenantEmail||''}\nכתובת הנכס: ${d.propertyAddress||''}\nתאריך ושעת חתימה: ${d.signedAt||''}\nמזהה מסמך SHA-256: ${d.documentHash||''}`;
+  const details=`פרטי חתימה על חוזה שכירות\nשם: ${d.tenantName||''}\nטלפון: ${d.tenantPhone||''}\nתעודת זהות: ${d.tenantId||''}\nכתובת מגורים: ${d.homeAddress||''}\nאימייל: ${d.tenantEmail||''}\nכתובת הנכס: ${d.propertyBaseAddress||''}\nפרטי החדר: ${d.roomDetails||''}\nתאריך ושעת חתימה: ${d.signedAt||''}\nמזהה מסמך SHA-256: ${d.documentHash||''}`;
   try{
     await navigator.clipboard.writeText(details);
     showStatus('פרטי החתימה הועתקו ללוח. אפשר להדביק אותם ב־WhatsApp או במייל כגיבוי.', 'success');
