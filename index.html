@@ -838,30 +838,38 @@ function validateRequiredFields(show=true){
   else box.style.display='none';
   return missing;
 }
-function buildContractText(d){ return `מספר חוזה: ${d.contractNumber || ''}
-סטטוס חתימה: ${lastSignatureData ? 'נחתם' : (d.signatureStatus || 'ממתין לחתימה')}
+function getAgreementRoomName(d){
+  const rawRoom=String(d.room || d.roomDetails || '').trim();
+  if(isStudioUnit(d.apartment, rawRoom) || rawRoom.includes('סטודיו')) return 'דירת סטודיו';
+  return rawRoom
+    .replace(/^חדר\s+/,'')
+    .replace(/^קומה\s+[^\s]+\s+/,'')
+    .trim() || 'החדר המפורט בדף זה';
+}
+function buildContractText(d){
+  const roomName=getAgreementRoomName(d);
+  return `בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".
 
-פרטי המשכיר: ${d.landlordFullName || ''}, ת.ז. ${d.landlordId || ''}, כתובת: ${d.landlordAddress || ''}, טלפון: ${d.landlordPhone || ''}.
+הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.
 
-1. המשכיר משכיר לשוכר את הנכס בכתובת ${d.propertyBaseAddress || d.propertyAddress || ''}, ${d.roomDetails || ''}, לתקופת השכירות הרשומה בחוזה זה.
+אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:
 
-2. דמי השכירות החודשיים יהיו בסך ${d.rentAmount || ''} ₪ וישולמו בכל חודש במועד שיוסכם בין הצדדים.
+1. מבוא
 
-3. השוכר יפקיד פיקדון בסך ${d.depositAmount || ''} ₪ להבטחת התחייבויותיו לפי חוזה זה.
+המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.
 
-4. השוכר מתחייב להשתמש במושכר למגורים בלבד, לשמור על ניקיון ותקינות המושכר, ולא לגרום נזק לרכוש או לשטחים המשותפים.
-
-5. השוכר מתחייב לשלם את חלקו בתשלומי חשמל, מים, ועד בית או כל תשלום אחר שסוכם בין הצדדים.
-
-6. אמצעי תשלום שהצהיר השוכר: ${d.paymentMethod || 'טרם מולא'}.
-
-7. תנאים נוספים:
-${d.extraTerms || ''}
-
-8. הערות השוכר:
-${d.tenantNotes || 'אין'}
-
-9. חתימה אלקטרונית על מסמך זה מהווה אישור לכך שהשוכר קרא, הבין והסכים לתנאי החוזה, וכי הפרטים שהשלים נכונים למיטב ידיעתו.`; }
+הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.`;
+}
+function buildContractHtml(d){
+  const roomName=escapeHtml(getAgreementRoomName(d));
+  return `
+    <p>בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".</p>
+    <p>הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.</p>
+    <p><strong>אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:</strong></p>
+    <p><strong>1. מבוא</strong></p>
+    <p>המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.</p>
+    <p>הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>`;
+}
 function refreshContract(){
   const d=getSignerData();
   document.getElementById('contractDate').innerText=`נוצר בתאריך: ${new Date().toLocaleDateString('he-IL')}`;
@@ -877,7 +885,7 @@ function refreshContract(){
   const propertyBaseEl=document.getElementById('viewPropertyBaseAddress'); if(propertyBaseEl) propertyBaseEl.innerText=d.propertyBaseAddress||'';
   const roomDetailsEl=document.getElementById('viewRoomDetails'); if(roomDetailsEl) roomDetailsEl.innerText=d.roomDetails||'';
   const periodEl=document.getElementById('viewContractPeriod'); if(periodEl) periodEl.innerText=`תקופת החוזה: ${formatDate(d.startDate)} עד ${formatDate(d.endDate)}`;
-  document.getElementById('contractText').innerText=buildContractText(d);
+  document.getElementById('contractText').innerHTML=buildContractHtml(d);
   validateRequiredFields(false);
 }
 function fillSignerDemoData(){ setVal('tenantId','123456789'); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail','noam01234@gmail.com'); setVal('paymentMethod','העברה בנקאית'); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו.','success'); }
@@ -927,7 +935,7 @@ function buildPdfRenderElement(){
   <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>פרטי החדר</th></tr><tr><td>${escapeHtml(d.propertyBaseAddress || '')}</td><td>${escapeHtml(d.roomDetails || '')}</td></tr></table>
   <div style="font-size:18px;font-weight:bold;color:#0a355c;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;text-align:center;margin:8px 0 12px;">תקופת החוזה: ${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</div>
   <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th><th>אמצעי תשלום</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td><td>${escapeHtml(d.paymentMethod)}</td></tr></table>
-  <div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text">${escapeHtml(buildContractText(d))}</div>
+  <div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text">${buildContractHtml(d)}</div>
   <div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
   <div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div></div>`;
   document.body.appendChild(wrapper); return wrapper;
