@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>חתימה על חוזה שכירות - v29</title>
+  <title>חוזה חתימה - v31</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -46,7 +46,7 @@
     .meta-item { padding:10px; border-left:1px solid var(--border); background:#f9fafb; }
     .meta-item:last-child{border-left:none;} .meta-item strong{display:block;color:var(--blue-dark);} 
     .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
-    .contract-text { white-space:pre-line; font-size:15px; }
+    .contract-text { white-space:pre-line; font-size:17px; line-height:1.75; }
     .sign-area { margin-top:16px; border:2px dashed var(--border); border-radius:14px; padding:12px; background:#fbfdff; }
     #signatureCanvas { width:100%; height:210px; border:1px solid #cbd5e1; border-radius:12px; background:white; touch-action:none; }
     .checkbox-line { display:flex; gap:10px; align-items:flex-start; margin:12px 0; font-weight:bold; }
@@ -75,17 +75,16 @@
     .pdf-table { width:100%; border-collapse:collapse; margin-bottom:12px; table-layout:fixed; }
     .pdf-table th { background:#f3f4f6; color:var(--blue-dark); border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; }
     .pdf-table td { border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; word-break:break-word; }
-    .pdf-contract-text { white-space:pre-line; font-size:15px; }
+    .pdf-contract-text { white-space:pre-line; font-size:17px; line-height:1.75; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .pdf-signature img { width:260px; height:auto; display:block; margin-top:8px; }
     .pdf-audit { font-size:13px; margin-top:12px; background:#f9fafb; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .ltr { direction:ltr; unicode-bidi:embed; word-break:break-all; text-align:left; }
     @media (max-width:950px){ .grid{grid-template-columns:1fr;} .contract-meta{grid-template-columns:1fr;} .meta-item{border-left:none;border-bottom:1px solid var(--border);} .meta-item:last-child{border-bottom:none;} .page{padding:14px;} }
 
-    /* גרסה 29 - פרטי נכס מפוצלים ותקופת חוזה מודגשת */
+    /* גרסה 31 - כותרת חוזה מספר, ניקוי פרטי מעקב והגדלת עיקרי ההסכם */
     .tabs, #adminPanel { display:none !important; }
     body.signer-only #signerPanel { display:grid !important; }
-    body.signer-only .topbar h1::after { content:' - דף שוכר'; font-size:18px; opacity:.9; }
     @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
     .tabs, #adminPanel { display: none !important; }
 </style>
@@ -93,7 +92,7 @@
 <body class="signer-only">
 <div class="page">
   <div class="topbar">
-    <h1>חתימה על חוזה שכירות</h1>
+    <h1>חוזה מספר <span id="topContractNumber"></span></h1>
     <p>יש להשלים את שדות החובה, לחתום וללחוץ על שלח.</p>
   </div>
 
@@ -250,11 +249,7 @@
 
     <div>
       <div class="contract-box" id="contractBox">
-        <div class="contract-header"><h2>חוזה שכירות לדוגמה</h2><div id="contractDate"></div></div>
-        <div class="contract-meta">
-          <div class="meta-item"><strong>מספר חוזה</strong><span id="viewContractNumber"></span></div>
-          <div class="meta-item"><strong>סטטוס חתימה</strong><span id="viewSignatureStatus"></span></div>
-        </div>
+        <div class="contract-header"><h2>חוזה מספר <span id="viewContractNumber"></span></h2><div id="contractDate"></div></div>
         <div class="section-title">פרטי המשכיר</div>
         <div class="contract-meta">
           <div class="meta-item"><strong>שם מלא</strong><span id="viewLandlordFullName"></span></div>
@@ -436,7 +431,7 @@ function loadAdminDemoData(){
   previewAdminContract(); showBox('adminStatus','נתוני הדמו נטענו.','success');
 }
 function adminContractHtml(data){
-  return `<div class="contract-header"><h2>תצוגה מקדימה - חוזה שכירות</h2><div>נוצר בתאריך: ${new Date().toLocaleDateString('he-IL')}</div></div>
+  return `<div class="contract-header"><h2>תצוגה מקדימה - חוזה מספר ${escapeHtml(data.contractNumber||'')}</h2><div>תאריך: ${new Date().toLocaleDateString('he-IL')}</div></div>
   <div class="contract-meta"><div class="meta-item"><strong>מספר חוזה</strong>${escapeHtml(data.contractNumber||'')}</div><div class="meta-item"><strong>סטטוס חתימה</strong>${escapeHtml(data.signatureStatus||'ממתין לחתימה')}</div><div class="meta-item"><strong>סוג רשומה</strong>${escapeHtml(data.personStatus||'מועמד')}</div></div>
   <div class="section-title">פרטים שמולאו על ידי המנהל</div>
   <div class="contract-meta"><div class="meta-item"><strong>שם השוכר</strong>${escapeHtml(data.tenantName)}</div><div class="meta-item"><strong>טלפון</strong>${escapeHtml(data.tenantPhone)}</div><div class="meta-item"><strong>כתובת המושכר</strong>${escapeHtml(data.propertyAddress)}</div></div>
@@ -872,9 +867,10 @@ function buildContractHtml(d){
 }
 function refreshContract(){
   const d=getSignerData();
-  document.getElementById('contractDate').innerText=`נוצר בתאריך: ${new Date().toLocaleDateString('he-IL')}`;
+  document.getElementById('contractDate').innerText=`תאריך: ${new Date().toLocaleDateString('he-IL')}`;
   const statusText = lastSignatureData ? 'נחתם' : (d.signatureStatus || 'ממתין לחתימה');
   const vc=document.getElementById('viewContractNumber'); if(vc) vc.innerText=d.contractNumber||'';
+  const topCn=document.getElementById('topContractNumber'); if(topCn) topCn.innerText=d.contractNumber||'';
   const vs=document.getElementById('viewSignatureStatus'); if(vs) vs.innerText=statusText;
   const vlf=document.getElementById('viewLandlordFullName'); if(vlf) vlf.innerText=d.landlordFullName||'';
   const vli=document.getElementById('viewLandlordId'); if(vli) vli.innerText=d.landlordId||'';
@@ -926,8 +922,7 @@ function renderAudit(){ if(!lastSignatureData) return; const box=document.getEle
 function buildPdfRenderElement(){
   const existing=document.getElementById('pdfRenderArea'); if(existing) existing.remove(); const d=lastSignatureData;
   const wrapper=document.createElement('div'); wrapper.id='pdfRenderArea'; wrapper.className='pdf-render-area';
-  wrapper.innerHTML=`<div class="pdf-render-page"><div class="pdf-title"><h1>חוזה שכירות לדוגמה - חתום אונליין</h1><div>נוצר בתאריך: ${escapeHtml(new Date().toLocaleDateString('he-IL'))}</div></div>
-  <div class="pdf-section-title">פרטי מעקב</div><table class="pdf-table"><tr><th>מספר חוזה</th><th>סטטוס חתימה</th><th>מזהה חתימה</th></tr><tr><td>${escapeHtml(d.contractNumber||'')}</td><td>${escapeHtml(d.signatureStatus||'נחתם')}</td><td class="ltr">${escapeHtml((d.documentHash||'').slice(0,24))}</td></tr></table>
+  wrapper.innerHTML=`<div class="pdf-render-page"><div class="pdf-title"><h1>חוזה מספר ${escapeHtml(d.contractNumber||'')}</h1><div>תאריך: ${escapeHtml(new Date().toLocaleDateString('he-IL'))}</div></div>
   <div class="pdf-section-title">פרטי המשכיר</div><table class="pdf-table"><tr><th>שם מלא</th><th>תעודת זהות</th><th>טלפון נייד</th></tr><tr><td>${escapeHtml(d.landlordFullName||'')}</td><td>${escapeHtml(d.landlordId||'')}</td><td>${escapeHtml(d.landlordPhone||'')}</td></tr></table>
   <table class="pdf-table"><tr><th>כתובת המשכיר</th></tr><tr><td>${escapeHtml(d.landlordAddress||'')}</td></tr></table>
   <div class="pdf-section-title">פרטי השוכר</div><table class="pdf-table"><tr><th>שם השוכר</th><th>טלפון</th><th>תעודת זהות</th></tr><tr><td>${escapeHtml(d.tenantName)}</td><td>${escapeHtml(d.tenantPhone)}</td><td>${escapeHtml(d.tenantId)}</td></tr></table>
