@@ -701,14 +701,28 @@ async function loadDataFromUrl(){
 
   let data = linkData ? { ...linkData, pendingSignatureId: pendingId || linkData.pendingSignatureId } : null;
 
+  // אם קיימים נתוני גיבוי בקישור, נמלא מהם מיד את המסך.
+  // לאחר מכן ננסה למשוך נתונים עדכניים מ־Supabase ולדרוס רק אם הצלחנו.
+  if(data){
+    data.supabaseUrl = data.supabaseUrl || cfg.supabaseUrl || '';
+    data.supabaseAnonKey = data.supabaseAnonKey || cfg.supabaseAnonKey || '';
+    data.supabaseBucket = data.supabaseBucket || cfg.supabaseBucket || 'signed-contracts';
+    data.supabaseTable = data.supabaseTable || cfg.supabaseTable || 'tenant_signatures';
+    data.pendingSignatureId = pendingId || data.pendingSignatureId || '';
+    normalizePropertyAddress(data);
+    await applyBaseData(data);
+    setMode('signer');
+  }
+
   if(!pendingId){
     showStatus('הקישור חסר מזהה חוזה. יש ליצור קישור חתימה חדש מהמערכת הראשית.', 'error');
     return false;
   }
 
-  if(!cfg.supabaseAnonKey){
+  if(!cfg.supabaseAnonKey && !data?.supabaseAnonKey){
     showStatus('הקישור חסר Supabase Publishable Key. יש לשמור את ההגדרות במערכת הראשית וליצור קישור חדש.', 'error');
-    return false;
+    showDebug('missing key\nurl='+location.href.slice(0,500));
+    return Boolean(data);
   }
 
   // קודם ננסה למשוך את כל פרטי החוזה מ־Supabase לפי מזהה הרשומה.
@@ -721,7 +735,11 @@ async function loadDataFromUrl(){
     console.warn('לא הצלחתי למשוך נתוני חוזה מ־Supabase:', e);
     if(!data){
       showStatus('לא הצלחתי לטעון את פרטי החוזה מ־Supabase. פרטי שגיאה: '+(e?.message || String(e)), 'error');
+      showDebug('Supabase fetch failed and no fallback data.\nPending ID: '+pendingId+'\nSupabase URL: '+(cfg.supabaseUrl||'')+'\nTable: '+(cfg.supabaseTable||'')+'\nError: '+(e?.message || String(e))+'\nURL: '+location.href.slice(0,900));
       return false;
+    } else {
+      showStatus('פרטי החוזה נטענו מהקישור. הערה: לא הצלחתי למשוך עדכון מ־Supabase, אך אפשר לחתום ולשלוח.', '');
+      showDebug('Using fallback data from link.\nPending ID: '+pendingId+'\nSupabase fetch error: '+(e?.message || String(e)));
     }
   }
 
@@ -801,6 +819,19 @@ function refreshContract(){
 }
 function fillSignerDemoData(){ setVal('tenantId','123456789'); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail','noam01234@gmail.com'); setVal('paymentMethod','העברה בנקאית'); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו.','success'); }
 function showStatus(msg,type=''){ showBox('statusBox',msg,type); }
+function showDebug(message){
+  let box=document.getElementById('debugBox');
+  if(!box){
+    box=document.createElement('div');
+    box.id='debugBox';
+    box.className='audit';
+    box.style.display='none';
+    const status=document.getElementById('statusBox');
+    if(status && status.parentNode) status.parentNode.insertBefore(box, status.nextSibling);
+  }
+  box.style.display='block';
+  box.innerHTML='<h3>פרטי אבחון טעינת חוזה</h3><div style="white-space:pre-wrap; direction:ltr; text-align:left; font-size:12px;">'+escapeHtml(message)+'</div>';
+}
 function resizeCanvas(){ const canvas=document.getElementById('signatureCanvas'); if(!canvas) return; const ratio=Math.max(window.devicePixelRatio||1,1); const width=canvas.offsetWidth, height=canvas.offsetHeight; canvas.width=width*ratio; canvas.height=height*ratio; canvas.getContext('2d').scale(ratio,ratio); if(signaturePad) signaturePad.clear(); }
 function initSignaturePad(){ const canvas=document.getElementById('signatureCanvas'); if(!canvas) return; signaturePad=new SignaturePad(canvas,{minWidth:.8,maxWidth:2.8,backgroundColor:'rgb(255,255,255)'}); resizeCanvas(); }
 function clearSignature(){ if(signaturePad) signaturePad.clear(); showStatus('החתימה נוקתה.',''); }
