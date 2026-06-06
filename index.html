@@ -49,6 +49,8 @@
     .contract-text { white-space:normal; font-size:22px; line-height:1.32; }
     .contract-text p { margin:0 0 5px 0; }
     .contract-text p.sub-clause { margin-right:34px; padding-right:12px; }
+    .contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; }
+    .contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-top:12px; font-weight:800; }
     .contract-text p:last-child { margin-bottom:0; }
     .sign-area { margin-top:16px; border:2px dashed var(--border); border-radius:14px; padding:12px; background:#fbfdff; }
     #signatureCanvas { width:100%; height:210px; border:1px solid #cbd5e1; border-radius:12px; background:white; touch-action:none; }
@@ -81,6 +83,8 @@
     .pdf-contract-text { white-space:normal; font-size:20px; line-height:1.32; }
     .pdf-contract-text p { margin:0 0 5px 0; }
     .pdf-contract-text p.sub-clause { margin-right:30px; padding-right:10px; }
+    .pdf-contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; }
+    .pdf-contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:10px; font-weight:800; }
     .pdf-contract-text p:last-child { margin-bottom:0; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .pdf-signature img { width:260px; height:auto; display:block; margin-top:8px; }
@@ -93,6 +97,26 @@
     body.signer-only #signerPanel { display:grid !important; }
     @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
     .tabs, #adminPanel { display: none !important; }
+
+    body.preview-mode .topbar p { font-size: 16px; }
+    body.preview-mode #signerPanel { grid-template-columns: 1fr !important; }
+    body.preview-mode #signerPanel > .card:first-child,
+    body.preview-mode .sign-area,
+    body.preview-mode #auditBox,
+    body.preview-mode #uploadResultBox,
+    body.preview-mode #pdfFrame { display: none !important; }
+    body.preview-mode .contract-box::before {
+      content: "תצוגה מקדימה בלבד - לא נשלח לחתימה ולא נשמר בענן";
+      display: block;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-weight: 800;
+      text-align: center;
+    }
 </style>
 </head>
 <body class="signer-only">
@@ -304,7 +328,7 @@
 
 <script>
 const { jsPDF } = window.jspdf;
-let signaturePad, lastSignatureData=null, lastPdfUrl=null, lastPdfBlob=null, lastPdfFileName=null, lastUploadedPdfUrl=null, lastUploadedStoragePath=null, lastInsertedRow=null, currentBaseData={};
+let signaturePad, lastSignatureData=null, lastPdfUrl=null, lastPdfBlob=null, lastPdfFileName=null, lastUploadedPdfUrl=null, lastUploadedStoragePath=null, lastInsertedRow=null, currentBaseData={}, isPreviewMode=false;
 const adminIds=['contractNumber','signatureStatus','personStatus','landlordFullName','landlordAddress','landlordId','landlordPhone','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount','depositAmount','extraTerms','supabaseUrl','supabaseAnonKey','supabaseBucket','supabaseTable','ownerWhatsapp'];
 const requiredSignerFields=[
   {id:'tenantId', label:'תעודת זהות'},
@@ -770,6 +794,8 @@ function dataHasUsefulContractFields(data){
 async function loadDataFromUrl(){
   const params=collectUrlParams();
   const mode=params.get('mode') || '';
+  isPreviewMode = mode === 'preview';
+  document.body.classList.toggle('preview-mode', isPreviewMode);
   const linkData=parseJsonParam(params, 'data') || parseJsonParam(params, 'd') || parseJsonParam(params, 'payload') || {};
   const legacyCfg=parseJsonParam(params, 'cfg') || {};
   const cfg={...legacyCfg, ...buildConfigFromParams(params, linkData)};
@@ -782,7 +808,8 @@ async function loadDataFromUrl(){
     normalizePropertyAddress(data);
     await applyBaseData(data);
     setMode('signer');
-    showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+    applyPreviewModeUi();
+    showStatus(isPreviewMode ? 'תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.' : 'פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
   }
 
   if(mode !== 'sign' && !pendingId && !data){
@@ -799,7 +826,8 @@ async function loadDataFromUrl(){
         normalizePropertyAddress(data);
         await applyBaseData(data);
         setMode('signer');
-        showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+        applyPreviewModeUi();
+        showStatus(isPreviewMode ? 'תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.' : 'פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
         return true;
       }
     }catch(e){
@@ -813,7 +841,10 @@ async function loadDataFromUrl(){
     normalizePropertyAddress(data);
     await applyBaseData(data);
     setMode('signer');
-    if(fetchError){
+    applyPreviewModeUi();
+    if(isPreviewMode){
+      showStatus('תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.', 'success');
+    } else if(fetchError){
       showStatus('פרטי החוזה נטענו מנתוני הגיבוי שבקישור. אפשר לחתום ולשלוח.', 'success');
       showDebug('טעינת Supabase נכשלה אך נתוני גיבוי נמצאו.\nID: '+pendingId+'\nשגיאה: '+fetchError);
     }else{
@@ -867,9 +898,26 @@ function getAgreementRoomName(d){
     .replace(/^קומה\s+[^\s]+\s+/,'')
     .trim() || 'החדר המפורט בדף זה';
 }
+function formatAmountForContract(value){
+  const raw=String(value ?? '').trim();
+  if(!raw) return '___';
+  return raw.replace(/\s*₪\s*/g,'').trim();
+}
+function extraTermsForContract(d){
+  const text=String(d?.extraTerms || '').trim();
+  return text || 'אין הערות נוספות.';
+}
+function getRentalMonthsForContract(d){
+  const fromDates = calculateRentalMonths(d?.startDate, d?.endDate);
+  const explicit = String(d?.rentalMonths || d?.contractMonths || '').trim();
+  return fromDates || explicit || '___';
+}
 function buildContractText(d){
   const roomName=getAgreementRoomName(d);
-  const rentalMonths=calculateRentalMonths(d.startDate,d.endDate) || '___';
+  const rentalMonths=getRentalMonthsForContract(d);
+  const rentAmount=formatAmountForContract(d.rentAmount);
+  const depositAmount=formatAmountForContract(d.depositAmount);
+  const extraTerms=extraTermsForContract(d);
   return `בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".
 
 הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.
@@ -902,13 +950,88 @@ function buildContractText(d){
 
 4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.
 
-4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.`;
+4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.
+
+4.5 השוכר מכיר בזכות המשכיר לבקר בדירה בכל זמן מתקבל על הדעת בכדי לבדוק את מצבה ואת דרך השימוש בה ו/או ביצוע תיקונים בדירה ו/או הצגתה למשכיר/קונה אחר ע"י הודעה מראש לשוכר בלבד.
+
+4.6 השוכר מסכים כי המשכיר יוכל להעביר את זכויותיו בדירה לאחר או לאחרים כרצונו ומבלי לקבל את הסכמת השוכר, ובלבד שמקבל או מקבלי הזכות יכבדו את זכויותיו של המשכיר ע"פ הסכם זה.
+
+4.7 השוכר מתחייב לפנות את הדירה ולהחזירה למשכיר בתום תקופת הסכם זה, כשהדירה במצב טוב ותקין כפי שהושכרה למעט בלאי רגיל וטבעי, כשהדירה ריקה מכל אדם ו/או חפץ שלא שייך לבעלים.
+
+4.8 השוכר מתחייב לשמור על השקט ולא להפריע לשכנים ולא לערוך מסיבות רועשות בדירה.
+
+5. הצהרת המשכיר
+
+הבעלים מצהיר בכך כי הדירה המושכרת רשומה במנהל מקרקעי ישראל על שמו ואין שום מניעה משפטית להשכירה לאחרים. כמו כן מצהיר הבעלים כי לא מתנהלים הליכים משפטיים בעניין הדירה המושכרת לרבות תביעות פינוי.
+
+6. דמי השכירות ואופציית הארכה
+
+6.1 השוכר מתחייב להעביר למשכיר כתמורה להשכרת החדר והשימוש בדירה בכלל דמי שכירות חודשיים השווים ל-${rentAmount} ₪ חודש בחודשו.
+
+6.3 דמי השכירות ישולמו ע"י השוכר למשכיר עבור ${rentalMonths} חודשים מראש ב-${rentalMonths} שיקים אשר ישולמו במעמד חתימת ההסכם והסכם זה מהווה קבלה בגינם.
+
+6.4 למען הסר ספק, דמי השכירות ישולמו בין אם השוכר משתמש בנכס ובין אם לאו.
+
+6.5 ככל שהצדדים ירצו להאריך את תקופת השכירות בשנה נוספת, יהא עליהם לבצע זאת עד ולכל המאוחר 3 חודשים מסיום החוזה בכתב. לא ממשו הצדדים רצונם להאריך את החוזה בכתב, יסתיים החוזה בין הצדדים במועד האמור דלעיל.
+
+7. מיסים והוצאות
+
+7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של 0 ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.
+
+7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.
+
+7.3 קנסות שיוטלו ו/או תשלומים הנוגעים לשוכר שישלם המשכיר מחשבונו, המשכיר יכול לחזור ולדרוש החזר צמוד למדד יוקר המחיה בתוספת מדד וריבית כחוק.
+
+7.4 באחריות המשכיר לתקן את הנכס בתור בעלים, בסמוך להודעת הדייר על בעיה ובאופן מהיר במקרים בהם התקלה מהווה הפרעה משמעותית לשגרת החיים בדירה ולשלם את כל תשלומי חובה ו/או היטלים ו/או מיסים הנוגעים לבעלי נכס אשר יוטלו על הדירה.
+
+8. אחריות השוכר
+
+8.1 השוכר מתחייב לשמור על הנכס כשהוא במצבו ההתחלתי למעט בלאי רגיל וסביר.
+
+8.2 השוכר מתחייב לתקן כל נזק ו/או פגם שנגרם על ידו או עקב שימושו בדירה על חשבונו ולשביעות רצונו של בעלי הנכס.
+
+8.3 השוכר מתחייב לא לעשות כל שינוי בדירה מבלי לקבל רשות בכתב ומראש מאת המשכיר.
+
+8.4 לשמור על ניקיון הדירה ולנקותה אחת לשבוע ולהשתמש בדירה באופן שלא יגרום מטרד לציבור ולשוכרים האחרים אשר עמו בדירה.
+
+8.5 השוכר מתחייב שלא לבצע קידוחים ו/או ניסורים בשיש, ו/או בקרמיקות ו/או בארונות הקיימים אלא באישור מאת המשכיר.
+
+9. בטחונות
+
+מבלי לפגוע בהתחייבויות הדדיות שיקבלו הצדדים על עצמם במסגרת הסכם זה ובזכותם לסעדים ע"פ כל דין, מתחייב השוכר להפקיד בידי המשכיר שיק על סך ${depositAmount} ₪.
+
+9.1 במידה והשוכר יעמוד בכל התחייבויותיו האמורות, אזי מתחייב המשכיר להשיב את הביטחונות כפי שהם מבלי לממשם, יום לאחר סיום תקופת החוזה.
+
+9.2 למשכיר תעמוד הזכות לממש את הביטחונות כולן ו/או חלקן בגין הפרה בוטה של הסכם זה. לעניין זה, הפרה בוטה תחול על סעיפים 2, 4-9.
+
+10. פינוי הנכס
+
+10.1 במידה והשוכר יפר הסכם זה בכך שלא ישלם בגין השכירות יהיה המשכיר רשאי לבטל הסכם זה ולפנות את הנכס באמצעותו או באמצעות אחר וזאת על פי הודעה מראש כאמור בסעיף 10 וזאת מבלי לפגוע בזכויותיו לתבוע על פי דין.
+
+10.2 השוכרים מתחייבים להחזיר את המושכר במצב נקי ותקין וכפי שקבלו את המושכר לידיהם.
+
+10.3 השוכר מתחייב לפנות את הדירה ביום שנקבע מבלי לקבל התראה מראש. במידה ולא ייעשה כן ישלם פיצוי בסך של 100 ₪ ליום מבלי לפגוע בזכויות המשכיר מלתבוע על פי כל דין או לפנותו בכוח חוקי.
+
+11. הודעות
+
+הודעה שתישלח בדואר רשום על פי כתובת הצדדים המוצגת במבוא להסכם זה תחשב כאילו הגיעה לצד המשולח בתוך 6 ימים מעת שליחתה בדואר רשום כאילו נמסרה ביד.
+
+הערות
+${extraTerms}
+
+ולראיה באו הצדדים על החתום
+
+חתימה שלי                         חתימת השוכר`;
 }
 function buildContractHtml(d){
   const roomName=escapeHtml(getAgreementRoomName(d));
-  const rentalMonths=escapeHtml(calculateRentalMonths(d.startDate,d.endDate) || '___');
+  const rentalMonthsRaw=getRentalMonthsForContract(d);
+  const rentalMonths=escapeHtml(rentalMonthsRaw);
   const start=escapeHtml(formatDate(d.startDate));
   const end=escapeHtml(formatDate(d.endDate));
+  const rentAmount=escapeHtml(formatAmountForContract(d.rentAmount));
+  const depositAmount=escapeHtml(formatAmountForContract(d.depositAmount));
+  const extraTerms=escapeHtml(extraTermsForContract(d)).replace(/\n/g,'<br>');
   const html = `
     <p>בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".</p>
     <p>הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.</p>
@@ -917,7 +1040,7 @@ function buildContractHtml(d){
     <p>המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.</p>
     <p>הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>
     <p><strong>2. תקופת השכירות</strong></p>
-    <p>2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${start} עד תאריך ${end}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
+    <p>2.1 תקופת השכירות המוסכמת הינה ל-<span class="contract-emphasis">${rentalMonths}</span> חודשים, החל מיום ${start} עד תאריך ${end}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
     <p>2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.</p>
     <p><strong>3. אי תכולת חוק הגנת הדיור</strong></p>
     <p>3.1 הצדדים מסכימים בזה כי השכירות האמורה לא תהיה מוגנת עפ"י חוק הגנת הדייר נוסח משולב (התשל"ב 1972), להלן "חוק הגנת הדייר".</p>
@@ -926,7 +1049,43 @@ function buildContractHtml(d){
     <p>4.1 השוכר מצהיר כי לא שילם כל דמי מפתח ולא נתן תמורה אחרת מכל סוג תמורת הדירה, והוא מודע כי השכירות הזו לא תהיה מוגנת עפ"י חוק הגנת הדייר.</p>
     <p>4.2 מטרת השכירות היא שימוש לצורכי מגורים בלבד, ללא הכנסת חיות מחמד ולא לכל מטרה אחרת.</p>
     <p>4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.</p>
-    <p>4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.</p>`;
+    <p>4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.</p>
+    <p>4.5 השוכר מכיר בזכות המשכיר לבקר בדירה בכל זמן מתקבל על הדעת בכדי לבדוק את מצבה ואת דרך השימוש בה ו/או ביצוע תיקונים בדירה ו/או הצגתה למשכיר/קונה אחר ע"י הודעה מראש לשוכר בלבד.</p>
+    <p>4.6 השוכר מסכים כי המשכיר יוכל להעביר את זכויותיו בדירה לאחר או לאחרים כרצונו ומבלי לקבל את הסכמת השוכר, ובלבד שמקבל או מקבלי הזכות יכבדו את זכויותיו של המשכיר ע"פ הסכם זה.</p>
+    <p>4.7 השוכר מתחייב לפנות את הדירה ולהחזירה למשכיר בתום תקופת הסכם זה, כשהדירה במצב טוב ותקין כפי שהושכרה למעט בלאי רגיל וטבעי, כשהדירה ריקה מכל אדם ו/או חפץ שלא שייך לבעלים.</p>
+    <p>4.8 השוכר מתחייב לשמור על השקט ולא להפריע לשכנים ולא לערוך מסיבות רועשות בדירה.</p>
+    <p><strong>5. הצהרת המשכיר</strong></p>
+    <p>הבעלים מצהיר בכך כי הדירה המושכרת רשומה במנהל מקרקעי ישראל על שמו ואין שום מניעה משפטית להשכירה לאחרים. כמו כן מצהיר הבעלים כי לא מתנהלים הליכים משפטיים בעניין הדירה המושכרת לרבות תביעות פינוי.</p>
+    <p><strong>6. דמי השכירות ואופציית הארכה</strong></p>
+    <p>6.1 השוכר מתחייב להעביר למשכיר כתמורה להשכרת החדר והשימוש בדירה בכלל דמי שכירות חודשיים השווים ל-<span class="highlight-value">${rentAmount} ₪</span> חודש בחודשו.</p>
+    <p>6.3 דמי השכירות ישולמו ע"י השוכר למשכיר עבור <span class="highlight-value">${rentalMonths}</span> חודשים מראש ב-<span class="highlight-value">${rentalMonths}</span> שיקים אשר ישולמו במעמד חתימת ההסכם והסכם זה מהווה קבלה בגינם.</p>
+    <p>6.4 למען הסר ספק, דמי השכירות ישולמו בין אם השוכר משתמש בנכס ובין אם לאו.</p>
+    <p>6.5 ככל שהצדדים ירצו להאריך את תקופת השכירות בשנה נוספת, יהא עליהם לבצע זאת עד ולכל המאוחר 3 חודשים מסיום החוזה בכתב. לא ממשו הצדדים רצונם להאריך את החוזה בכתב, יסתיים החוזה בין הצדדים במועד האמור דלעיל.</p>
+    <p><strong>7. מיסים והוצאות</strong></p>
+    <p>7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של 0 ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.</p>
+    <p>7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.</p>
+    <p>7.3 קנסות שיוטלו ו/או תשלומים הנוגעים לשוכר שישלם המשכיר מחשבונו, המשכיר יכול לחזור ולדרוש החזר צמוד למדד יוקר המחיה בתוספת מדד וריבית כחוק.</p>
+    <p>7.4 באחריות המשכיר לתקן את הנכס בתור בעלים, בסמוך להודעת הדייר על בעיה ובאופן מהיר במקרים בהם התקלה מהווה הפרעה משמעותית לשגרת החיים בדירה ולשלם את כל תשלומי חובה ו/או היטלים ו/או מיסים הנוגעים לבעלי נכס אשר יוטלו על הדירה.</p>
+    <p><strong>8. אחריות השוכר</strong></p>
+    <p>8.1 השוכר מתחייב לשמור על הנכס כשהוא במצבו ההתחלתי למעט בלאי רגיל וסביר.</p>
+    <p>8.2 השוכר מתחייב לתקן כל נזק ו/או פגם שנגרם על ידו או עקב שימושו בדירה על חשבונו ולשביעות רצונו של בעלי הנכס.</p>
+    <p>8.3 השוכר מתחייב לא לעשות כל שינוי בדירה מבלי לקבל רשות בכתב ומראש מאת המשכיר.</p>
+    <p>8.4 לשמור על ניקיון הדירה ולנקותה אחת לשבוע ולהשתמש בדירה באופן שלא יגרום מטרד לציבור ולשוכרים האחרים אשר עמו בדירה.</p>
+    <p>8.5 השוכר מתחייב שלא לבצע קידוחים ו/או ניסורים בשיש, ו/או בקרמיקות ו/או בארונות הקיימים אלא באישור מאת המשכיר.</p>
+    <p><strong>9. בטחונות</strong></p>
+    <p>מבלי לפגוע בהתחייבויות הדדיות שיקבלו הצדדים על עצמם במסגרת הסכם זה ובזכותם לסעדים ע"פ כל דין, מתחייב השוכר להפקיד בידי המשכיר שיק על סך <span class="highlight-value">${depositAmount} ₪</span>.</p>
+    <p>9.1 במידה והשוכר יעמוד בכל התחייבויותיו האמורות, אזי מתחייב המשכיר להשיב את הביטחונות כפי שהם מבלי לממשם, יום לאחר סיום תקופת החוזה.</p>
+    <p>9.2 למשכיר תעמוד הזכות לממש את הביטחונות כולן ו/או חלקן בגין הפרה בוטה של הסכם זה. לעניין זה, הפרה בוטה תחול על סעיפים 2, 4-9.</p>
+    <p><strong>10. פינוי הנכס</strong></p>
+    <p>10.1 במידה והשוכר יפר הסכם זה בכך שלא ישלם בגין השכירות יהיה המשכיר רשאי לבטל הסכם זה ולפנות את הנכס באמצעותו או באמצעות אחר וזאת על פי הודעה מראש כאמור בסעיף 10 וזאת מבלי לפגוע בזכויותיו לתבוע על פי דין.</p>
+    <p>10.2 השוכרים מתחייבים להחזיר את המושכר במצב נקי ותקין וכפי שקבלו את המושכר לידיהם.</p>
+    <p>10.3 השוכר מתחייב לפנות את הדירה ביום שנקבע מבלי לקבל התראה מראש. במידה ולא ייעשה כן ישלם פיצוי בסך של 100 ₪ ליום מבלי לפגוע בזכויות המשכיר מלתבוע על פי כל דין או לפנותו בכוח חוקי.</p>
+    <p><strong>11. הודעות</strong></p>
+    <p>הודעה שתישלח בדואר רשום על פי כתובת הצדדים המוצגת במבוא להסכם זה תחשב כאילו הגיעה לצד המשולח בתוך 6 ימים מעת שליחתה בדואר רשום כאילו נמסרה ביד.</p>
+    <p><strong>הערות</strong></p>
+    <p>${extraTerms}</p>
+    <p><strong>ולראיה באו הצדדים על החתום</strong></p>
+    <div class="signature-row"><div>חתימה שלי</div><div>חתימת השוכר</div></div>`;
   return html.replace(/<p>(\s*\d+\.\d+\s)/g, '<p class="sub-clause">$1');
 }
 function refreshContract(){
@@ -950,6 +1109,19 @@ function refreshContract(){
 }
 function fillSignerDemoData(){ setVal('tenantId','123456789'); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail','noam01234@gmail.com'); setVal('paymentMethod','העברה בנקאית'); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו.','success'); }
 function showStatus(msg,type=''){ showBox('statusBox',msg,type); }
+
+function applyPreviewModeUi(){
+  if(!isPreviewMode) return;
+  document.body.classList.add('preview-mode');
+  const title=document.querySelector('.topbar h1');
+  const contractNumber=sanitizeContractNumber(currentBaseData.contractNumber) || currentBaseData.contractNumber || '000000';
+  if(title) title.innerHTML='תצוגה מקדימה - חוזה מספר <span id="topContractNumber">'+escapeHtml(contractNumber)+'</span>';
+  const p=document.querySelector('.topbar p');
+  if(p) p.textContent='תצוגה מקדימה בלבד. החוזה לא נשלח לשוכר, לא נשמר ב־Supabase ולא נוצר PDF חתום.';
+  const sectionTitles=[...document.querySelectorAll('.section-title')];
+  sectionTitles.forEach(el=>{ if(el.textContent.trim()==='חתימת השוכר') el.style.display='none'; });
+}
+
 function showDebug(message){
   let box=document.getElementById('debugBox');
   if(!box){
@@ -1041,6 +1213,7 @@ async function shareSignedPdf(){
 }
 
 async function submitSignedContract(){
+  if(isPreviewMode){ showStatus('זו תצוגה מקדימה בלבד. לא ניתן לשלוח חתימה ממסך זה.', 'error'); return; }
   try{
     showStatus('בודק את הפרטים ושולח את החוזה למערכת...', '');
     await signContract();
@@ -1233,3 +1406,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+    .contract-emphasis {
+      font-size: 1.18em;
+      font-weight: 800;
+      color: var(--blue-dark);
+      white-space: nowrap;
+    }
+
