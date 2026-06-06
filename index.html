@@ -892,11 +892,29 @@ function validateRequiredFields(show=true){
 }
 function getAgreementRoomName(d){
   const rawRoom=String(d.room || d.roomDetails || '').trim();
-  if(isStudioUnit(d.apartment, rawRoom) || rawRoom.includes('סטודיו')) return 'דירת סטודיו';
+  if(isStudioContract(d)) return 'דירת סטודיו';
   return rawRoom
     .replace(/^חדר\s+/,'')
     .replace(/^קומה\s+[^\s]+\s+/,'')
     .trim() || 'החדר המפורט בדף זה';
+}
+function isStudioContract(d){
+  d = d || {};
+  const values=[d.apartment, d.room, d.roomDetails, d.propertyAddress].map(v=>String(v||'').trim());
+  return values.some(v=>v==='סטודיו' || v.includes('דירת סטודיו'));
+}
+function getPropertyContentsText(d){
+  if(isStudioContract(d)){
+    return 'דירת סטודיו הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ארון, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".';
+  }
+  return 'דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".';
+}
+function getApartmentIntroText(d){
+  if(isStudioContract(d)){
+    return 'הדירה היא דירת סטודיו המושכרת לשוכר אחד.';
+  }
+  const roomName=getAgreementRoomName(d);
+  return `${apartmentIntro}`;
 }
 function formatAmountForContract(value){
   const raw=String(value ?? '').trim();
@@ -913,13 +931,14 @@ function getRentalMonthsForContract(d){
   return fromDates || explicit || '___';
 }
 function buildContractText(d){
-  const roomName=getAgreementRoomName(d);
+  const propertyContents=getPropertyContentsText(d);
+  const apartmentIntro=getApartmentIntroText(d);
   const rentalMonths=getRentalMonthsForContract(d);
   const rentAmount=formatAmountForContract(d.rentAmount);
   const depositAmount=formatAmountForContract(d.depositAmount);
   const municipalTaxAmount=formatAmountForContract(d.municipalTaxAmount || d.arnonaAmount || '0');
   const extraTerms=extraTermsForContract(d);
-  return `בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".
+  return `בנוגע לדירה שפרטיה מופיעים בדף זה, ${propertyContents}
 
 הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.
 
@@ -929,7 +948,7 @@ function buildContractText(d){
 
 המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.
 
-הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.
+${apartmentIntro}
 
 2. תקופת השכירות
 
@@ -1026,7 +1045,8 @@ ${extraTerms}
 }
 function buildContractHtml(d){
   d = d || {};
-  const roomName=escapeHtml(getAgreementRoomName(d));
+  const propertyContents=escapeHtml(getPropertyContentsText(d));
+  const apartmentIntro=escapeHtml(getApartmentIntroText(d));
   const rentalMonthsRaw=getRentalMonthsForContract(d);
   const rentalMonths=escapeHtml(rentalMonthsRaw);
   const start=escapeHtml(formatDate(d.startDate));
@@ -1036,12 +1056,12 @@ function buildContractHtml(d){
   const municipalTaxAmount=escapeHtml(formatAmountForContract(d.municipalTaxAmount || d.arnonaAmount || '0'));
   const extraTerms=escapeHtml(extraTermsForContract(d)).replace(/\n/g,'<br>');
   return `
-    <p>בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".</p>
+    <p>בנוגע לדירה שפרטיה מופיעים בדף זה, ${propertyContents}</p>
     <p>הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.</p>
     <p><strong>אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:</strong></p>
     <p><strong>1. מבוא</strong></p>
     <p class="standalone-clause">המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.</p>
-    <p class="standalone-clause">הדירה היא דירת 5 חדרים (4 חדרי שינה) המושכרת ל-4 שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שוות בחלקים השונים בדירה (למעט חדרי השינה) כאשר השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.</p>
+    <p class="standalone-clause">${apartmentIntro}</p>
 
     <p><strong>2. תקופת השכירות</strong></p>
     <p class="sub-clause">2.1 תקופת השכירות המוסכמת הינה ל-<span class="highlight-value">${rentalMonths}</span> חודשים, החל מיום <span class="highlight-value">${start}</span> עד תאריך <span class="highlight-value">${end}</span>, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
