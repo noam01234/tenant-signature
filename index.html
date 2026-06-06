@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>חוזה חתימה - v34</title>
+  <title>חוזה חתימה - v39</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -48,7 +48,7 @@
     .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
     .contract-text { white-space:normal; font-size:22px; line-height:1.32; }
     .contract-text p { margin:0 0 5px 0; }
-    .contract-text p.sub-clause { margin-right:34px; padding-right:12px; }
+    .contract-text p.sub-clause, .contract-text p.standalone-clause { margin-right:34px; padding-right:12px; }
     .contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; }
     .contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-top:12px; font-weight:800; }
     .contract-text p:last-child { margin-bottom:0; }
@@ -82,7 +82,7 @@
     .pdf-table td { border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; word-break:break-word; }
     .pdf-contract-text { white-space:normal; font-size:20px; line-height:1.32; }
     .pdf-contract-text p { margin:0 0 5px 0; }
-    .pdf-contract-text p.sub-clause { margin-right:30px; padding-right:10px; }
+    .pdf-contract-text p.sub-clause, .pdf-contract-text p.standalone-clause { margin-right:30px; padding-right:10px; }
     .pdf-contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; }
     .pdf-contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:10px; font-weight:800; }
     .pdf-contract-text p:last-child { margin-bottom:0; }
@@ -329,7 +329,7 @@
 <script>
 const { jsPDF } = window.jspdf;
 let signaturePad, lastSignatureData=null, lastPdfUrl=null, lastPdfBlob=null, lastPdfFileName=null, lastUploadedPdfUrl=null, lastUploadedStoragePath=null, lastInsertedRow=null, currentBaseData={}, isPreviewMode=false;
-const adminIds=['contractNumber','signatureStatus','personStatus','landlordFullName','landlordAddress','landlordId','landlordPhone','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount','depositAmount','extraTerms','supabaseUrl','supabaseAnonKey','supabaseBucket','supabaseTable','ownerWhatsapp'];
+const adminIds=['contractNumber','signatureStatus','personStatus','landlordFullName','landlordAddress','landlordId','landlordPhone','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount','depositAmount','municipalTaxAmount','extraTerms','supabaseUrl','supabaseAnonKey','supabaseBucket','supabaseTable','ownerWhatsapp'];
 const requiredSignerFields=[
   {id:'tenantId', label:'תעודת זהות'},
   {id:'homeAddress', label:'כתובת מגורים מלאה'},
@@ -917,6 +917,7 @@ function buildContractText(d){
   const rentalMonths=getRentalMonthsForContract(d);
   const rentAmount=formatAmountForContract(d.rentAmount);
   const depositAmount=formatAmountForContract(d.depositAmount);
+  const municipalTaxAmount=formatAmountForContract(d.municipalTaxAmount || d.arnonaAmount || '0');
   const extraTerms=extraTermsForContract(d);
   return `בנוגע לדירה שפרטיה מופיעים בדף זה, דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".
 
@@ -976,7 +977,7 @@ function buildContractText(d){
 
 7. מיסים והוצאות
 
-7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של 0 ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.
+7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של ${municipalTaxAmount} ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.
 
 7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.
 
@@ -1062,7 +1063,7 @@ function buildContractHtml(d){
     <p>6.4 למען הסר ספק, דמי השכירות ישולמו בין אם השוכר משתמש בנכס ובין אם לאו.</p>
     <p>6.5 ככל שהצדדים ירצו להאריך את תקופת השכירות בשנה נוספת, יהא עליהם לבצע זאת עד ולכל המאוחר 3 חודשים מסיום החוזה בכתב. לא ממשו הצדדים רצונם להאריך את החוזה בכתב, יסתיים החוזה בין הצדדים במועד האמור דלעיל.</p>
     <p><strong>7. מיסים והוצאות</strong></p>
-    <p>7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של 0 ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.</p>
+    <p>7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של <span class="highlight-value">${municipalTaxAmount} ₪</span> לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.</p>
     <p>7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.</p>
     <p>7.3 קנסות שיוטלו ו/או תשלומים הנוגעים לשוכר שישלם המשכיר מחשבונו, המשכיר יכול לחזור ולדרוש החזר צמוד למדד יוקר המחיה בתוספת מדד וריבית כחוק.</p>
     <p>7.4 באחריות המשכיר לתקן את הנכס בתור בעלים, בסמוך להודעת הדייר על בעיה ובאופן מהיר במקרים בהם התקלה מהווה הפרעה משמעותית לשגרת החיים בדירה ולשלם את כל תשלומי חובה ו/או היטלים ו/או מיסים הנוגעים לבעלי נכס אשר יוטלו על הדירה.</p>
@@ -1086,7 +1087,8 @@ function buildContractHtml(d){
     <p>${extraTerms}</p>
     <p><strong>ולראיה באו הצדדים על החתום</strong></p>
     <div class="signature-row"><div>חתימה שלי</div><div>חתימת השוכר</div></div>`;
-  return html.replace(/<p>(\s*\d+\.\d+\s)/g, '<p class="sub-clause">$1');
+  const withSubClauses = html.replace(/<p>(\s*\d+\.\d+\s)/g, '<p class="sub-clause">$1');
+  return withSubClauses.replace(/<p>((?!<strong>)(?!\s*\d+\.\d+\s)(?!\s*בנוגע לדירה)(?!\s*הואיל)(?!\s*<span)(?!\s*\$\{extraTerms\})(?!\s*$)[^<][\s\S]*?)<\/p>/g, '<p class="standalone-clause">$1</p>');
 }
 function refreshContract(){
   const d=getSignerData();
