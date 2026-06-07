@@ -910,11 +910,16 @@ function getPropertyContentsText(d){
   return 'דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".';
 }
 function getApartmentIntroText(d){
+  if (d && d.apartmentIntro) {
+    return String(d.apartmentIntro);
+  }
+
   if(isStudioContract(d)){
     return 'הדירה היא דירת סטודיו המושכרת לשוכר אחד.';
   }
+
   const roomName=getAgreementRoomName(d);
-  return `${apartmentIntro}`;
+  return `הדירה היא דירת 5 חדרים, המושכרת למספר שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שימוש שוות בחלקים המשותפים בדירה, למעט חדרי השינה. השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.`;
 }
 function formatAmountForContract(value){
   const raw=String(value ?? '').trim();
