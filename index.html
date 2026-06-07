@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>חוזה חתימה - v43</title>
+  <title>חוזה חתימה - GitHub fixed</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -137,11 +137,11 @@
       <div class="subhead">כאן תמלא את מה שאתה כבר יודע. השדות החסרים יישארו למילוי השוכר.</div>
 
       <div class="local-warning" id="localWarning" style="display:none;">
-        אתה מריץ את הדמו כקובץ מקומי במחשב. קישור חתימה כזה יעבוד רק במחשב שלך. כדי לשלוח לטלפון, העלה את הקובץ ל־Netlify / GitHub Pages / שרת IIS פנימי, ואז הדבק כאן את הכתובת הציבורית של הדף.
+        אתה מריץ את הדמו כקובץ מקומי במחשב. קישור חתימה כזה יעבוד רק במחשב שלך. כדי לשלוח לטלפון, העלה את הקובץ ל־GitHub Pages / שרת IIS פנימי, ואז הדבק כאן את הכתובת הציבורית של הדף.
       </div>
 
       <label>כתובת ציבורית של דף החתימה, אופציונלי</label>
-      <input id="publicBaseUrl" value="https://shimmering-smakager-1c56ed.netlify.app/" placeholder="לדוגמה: https://your-site.netlify.app/" />
+      <input id="publicBaseUrl" value="https://noam01234.github.io/tenant-signature/" placeholder="לדוגמה: https://noam01234.github.io/tenant-signature/" />
       <div class="small-note">אם השדה ריק, הקישור ייווצר לפי הכתובת הנוכחית. בקובץ מקומי זה יהיה file:/// ולכן לא ייפתח בטלפון.</div>
 
       <div class="section-title" style="margin-top:16px;">חיבור Supabase</div>
@@ -476,7 +476,7 @@ function loadAdminDemoData(){
   setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד');
   setVal('a_tenantName','ישראל ישראלי'); setVal('a_tenantPhone','050-0000000'); setVal('a_propertyAddress','רחוב הדוגמה 10, תל אביב');
   setVal('a_building','A'); setVal('a_apartment','12'); setVal('a_room','1'); setVal('a_startDate',todayIso()); setVal('a_endDate',addMonths(new Date(),12));
-  setVal('a_rentAmount','3,500'); setVal('a_depositAmount','3,500'); setVal('publicBaseUrl','https://shimmering-smakager-1c56ed.netlify.app/'); setVal('a_supabaseUrl','https://erhfqlcfwjqehffxetbv.supabase.co'); setVal('a_supabaseBucket', val('a_supabaseBucket') || 'signed-contracts'); setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures'); setVal('a_ownerWhatsapp','972545668879');
+  setVal('a_rentAmount','3,500'); setVal('a_depositAmount','3,500'); setVal('publicBaseUrl','https://noam01234.github.io/tenant-signature/'); setVal('a_supabaseUrl','https://erhfqlcfwjqehffxetbv.supabase.co'); setVal('a_supabaseBucket', val('a_supabaseBucket') || 'signed-contracts'); setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures'); setVal('a_ownerWhatsapp','972545668879');
   setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד'); setVal('a_extraTerms','השוכר מתחייב לשמור על תקינות החדר והרכוש המשותף, לשלם בזמן את דמי השכירות ואת חלקו בתשלומי חשמל ומים.');
   previewAdminContract(); showBox('adminStatus','נתוני הדמו נטענו.','success');
 }
@@ -730,6 +730,8 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
     building: row.building || raw.building || '',
     apartment: row.apartment || raw.apartment || '',
     room: row.room || raw.room || '',
+    roomDetails: raw.roomDetails || buildRoomDetails(row.apartment || raw.apartment || '', row.room || raw.room || ''),
+    apartmentIntro: raw.apartmentIntro || '',
     supabaseUrl,
     supabaseAnonKey,
     supabaseBucket: bucket,
@@ -910,8 +912,26 @@ function getPropertyContentsText(d){
   return 'דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".';
 }
 function getApartmentIntroText(d){
-  if (d && d.apartmentIntro) {
-    return String(d.apartmentIntro);
+  d = d || {};
+  let apartmentIntro = '';
+
+  if (d.apartmentIntro) {
+    apartmentIntro = d.apartmentIntro;
+  } else if (d.apartment_intro) {
+    apartmentIntro = d.apartment_intro;
+  } else if (d.apartmentIntroText) {
+    apartmentIntro = d.apartmentIntroText;
+  } else {
+    try {
+      apartmentIntro = new URLSearchParams(window.location.search || '').get('apartmentIntro') || '';
+    } catch(e) {
+      apartmentIntro = '';
+    }
+  }
+
+  apartmentIntro = String(apartmentIntro || '').trim();
+  if (apartmentIntro) {
+    return apartmentIntro;
   }
 
   if(isStudioContract(d)){
@@ -1293,7 +1313,7 @@ async function uploadSignedPdfToSupabase(){
     return;
   }
   if(!window.supabase || !window.supabase.createClient){
-    showStatus('ספריית Supabase לא נטענה. בדוק שיש אינטרנט וש־Netlify לא חסם טעינת סקריפטים.', 'error');
+    showStatus('ספריית Supabase לא נטענה. בדוק שיש אינטרנט וש־GitHub לא חסם טעינת סקריפטים.', 'error');
     return;
   }
   const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
@@ -1438,7 +1458,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const isLocal=location.protocol==='file:';
   const warning=document.getElementById('localWarning');
   if(warning && isLocal) warning.style.display='block';
-  setVal('publicBaseUrl','https://shimmering-smakager-1c56ed.netlify.app/');
+  setVal('publicBaseUrl','https://noam01234.github.io/tenant-signature/');
   setVal('a_supabaseUrl','https://erhfqlcfwjqehffxetbv.supabase.co');
   setVal('a_ownerWhatsapp','972545668879');
   setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד');
@@ -1458,10 +1478,3 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
-    .contract-emphasis {
-      font-size: 1.18em;
-      font-weight: 800;
-      color: var(--blue-dark);
-      white-space: nowrap;
-    }
-
