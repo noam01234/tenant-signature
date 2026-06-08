@@ -1177,9 +1177,7 @@ ${apartmentIntro}
 הערות
 ${extraTerms}
 
-ולראיה באו הצדדים על החתום
-
-חתימה שלי                         חתימת השוכר`;
+ולראיה באו הצדדים על החתום`;
 }
 function buildContractHtml(d){
   d = d || {};
@@ -1257,8 +1255,7 @@ function buildContractHtml(d){
     <p><strong>הערות</strong></p>
     <p class="standalone-clause">${extraTerms}</p>
 
-    <p><strong>ולראיה באו הצדדים על החתום</strong></p>
-    <div class="signature-row"><div>חתימה שלי</div><div>חתימת השוכר</div></div>`;
+    <p><strong>ולראיה באו הצדדים על החתום</strong></p>`;
 }
 function setContractTextHtml(d){
   const el=document.getElementById('contractText');
@@ -1520,7 +1517,11 @@ async function createSignedPdf(options={download:true, showPreview:true}){
     const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794});
     const imgData=canvas.toDataURL('image/jpeg',.98);
     if(i>0) doc.addPage();
-    doc.addImage(imgData,'JPEG',0,0,pageWidth,pageHeight);
+    const pdfMarginX=10;
+    const pdfMarginY=10;
+    const imgWidth=pageWidth-(pdfMarginX*2);
+    const imgHeight=imgWidth*(pageHeight/pageWidth);
+    doc.addImage(imgData,'JPEG',pdfMarginX,pdfMarginY,imgWidth,imgHeight);
   }
   renderEl.remove();
   if(lastPdfUrl) URL.revokeObjectURL(lastPdfUrl);
