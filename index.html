@@ -297,20 +297,13 @@
       <label class="required">כתובת מגורים מלאה</label>
       <input id="homeAddress" placeholder="רחוב, מספר, עיר" />
 
-      <label class="required">דואר אלקטרוני</label>
+      <label>דואר אלקטרוני (לא חובה)</label>
       <input id="tenantEmail" type="email" placeholder="name@example.com" />
 
-      <label class="required">אמצעי תשלום / הערה לתשלום</label>
-      <select id="paymentMethod">
-        <option value="">בחר/י</option>
-        <option>העברה בנקאית</option>
-        <option>מזומן</option>
-        <option>צ'קים</option>
-        <option>ביט / פייבוקס</option>
+      <select id="paymentMethod" class="hidden" aria-hidden="true">
+        <option value=""></option>
       </select>
-
-      <label>הערות השוכר</label>
-      <textarea id="tenantNotes" placeholder="לא חובה"></textarea>
+      <textarea id="tenantNotes" class="hidden" aria-hidden="true"></textarea>
 
       <div class="small-note">לאחר החתימה ולחיצה על שלח, החוזה החתום יישמר במערכת.</div>
     </div>
@@ -370,9 +363,7 @@ let signaturePad, lastSignatureData=null, lastPdfUrl=null, lastPdfBlob=null, las
 const adminIds=['contractNumber','signatureStatus','personStatus','landlordFullName','landlordAddress','landlordId','landlordPhone','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount','depositAmount','municipalTaxAmount','extraTerms','supabaseUrl','supabaseAnonKey','supabaseBucket','supabaseTable','ownerWhatsapp'];
 const requiredSignerFields=[
   {id:'tenantId', label:'תעודת זהות'},
-  {id:'homeAddress', label:'כתובת מגורים מלאה'},
-  {id:'tenantEmail', label:'דואר אלקטרוני'},
-  {id:'paymentMethod', label:'אמצעי תשלום / הערה לתשלום'}
+  {id:'homeAddress', label:'כתובת מגורים מלאה'}
 ];
 function todayIso(){return new Date().toISOString().slice(0,10);} 
 function formatContractNumber(value){
@@ -1301,7 +1292,7 @@ function refreshContract(){
   setContractTextHtml(d);
   validateRequiredFields(false);
 }
-function fillSignerDemoData(){ setVal('tenantId','123456789'); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail','noam01234@gmail.com'); setVal('paymentMethod','העברה בנקאית'); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו.','success'); }
+function fillSignerDemoData(){ setVal('tenantId',''); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail',''); setVal('paymentMethod',''); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו. יש למלא תעודת זהות תקינה לפני שליחה.','success'); }
 function showStatus(msg,type=''){ showBox('statusBox',msg,type); }
 
 function getCurrentContractNumber(){
@@ -1328,7 +1319,7 @@ function clearLegacySignatureIfDifferent(){
   }catch(e){ localStorage.removeItem('tenantSignatureDemoV17'); }
 }
 function setSignerFormDisabled(disabled){
-  ['tenantId','homeAddress','tenantEmail','paymentMethod','tenantNotes','approveTerms'].forEach(id=>{
+  ['tenantId','homeAddress','tenantEmail','approveTerms'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.disabled=Boolean(disabled);
   });
@@ -1457,7 +1448,7 @@ function buildPdfMetaPageHtml(d){
   <table class="pdf-table"><tr><th>כתובת מגורים</th><th>דואר אלקטרוני</th></tr><tr><td>${escapeHtml(d.homeAddress)}</td><td>${escapeHtml(d.tenantEmail)}</td></tr></table>
   <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>פרטי החדר</th></tr><tr><td>${escapeHtml(d.propertyBaseAddress || '')}</td><td>${escapeHtml(d.roomDetails || '')}</td></tr></table>
   <div style="font-size:18px;font-weight:bold;color:#0a355c;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;text-align:center;margin:8px 0 12px;">תקופת החוזה: ${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</div>
-  <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th><th>אמצעי תשלום</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td><td>${escapeHtml(d.paymentMethod)}</td></tr></table>`;
+  <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td></tr></table>`;
 }
 function buildPdfSignatureHtml(d){
   return `<div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
@@ -1488,7 +1479,7 @@ function buildPdfRenderElement(){
   let currentPage=createPage();
   currentPage.innerHTML='<div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text"></div>';
   let currentText=currentPage.querySelector('.pdf-contract-text');
-  const maxPageHeight=1090;
+  const maxPageHeight=1123;
   const temp=document.createElement('div');
   temp.innerHTML=buildContractHtml(d);
   [...temp.children].forEach((node)=>{
@@ -1772,7 +1763,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures');
   setVal('a_startDate',todayIso()); setVal('a_endDate',addMonths(new Date(),12)); previewAdminContract();
   adminIds.forEach(id=>{ const el=document.getElementById('a_'+id); if(el) el.addEventListener('input',previewAdminContract); });
-  ['tenantId','homeAddress','tenantEmail','paymentMethod','tenantNotes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',refreshContract); });
+  ['tenantId','homeAddress','tenantEmail'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',refreshContract); });
   const loaded=await loadDataFromUrl();
   if(!loaded){
     setMode('signer');
