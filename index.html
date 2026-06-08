@@ -733,7 +733,7 @@ async function applyBaseData(data){
   }
   normalizePropertyAddress(data);
   currentBaseData=data;
-  setVal('tenantName',data.tenantName); setVal('tenantPhone',data.tenantPhone); setVal('tenantId','123456789'); setVal('homeAddress',data.homeAddress || ''); setVal('tenantEmail','noam01234@gmail.com'); setVal('paymentMethod','העברה בנקאית'); refreshContract();
+  setVal('tenantName',data.tenantName || ''); setVal('tenantPhone',data.tenantPhone || ''); setVal('tenantId',data.tenantId || ''); setVal('homeAddress',data.homeAddress || ''); setVal('tenantEmail',data.tenantEmail || ''); setVal('paymentMethod',data.paymentMethod || ''); setVal('tenantNotes',data.tenantNotes || ''); refreshContract();
 }
 async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   const supabaseUrl=(cfg?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co').trim().replace(/\/$/, '');
@@ -928,7 +928,7 @@ async function loadDataFromUrl(){
         ? await fetchPendingSignatureDataFromSupabase(pendingId, cfg)
         : await fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg);
       if(rowData && dataHasUsefulContractFields(rowData)){
-        data={...(data || {}), ...rowData, pendingSignatureId: rowData.pendingSignatureId || pendingId, publicToken, ...cfg};
+        data={...(data || {}), ...rowData, ...cfg, pendingSignatureId: rowData.pendingSignatureId || pendingId || cfg.pendingSignatureId || '', publicToken: rowData.publicToken || publicToken || cfg.publicToken || ''};
         normalizePropertyAddress(data);
         await applyBaseData(data);
         setMode('signer');
@@ -992,10 +992,23 @@ function getSignerData(){
     approvalText:'השוכר אישר שקרא והסכים לתנאי החוזה וחתם עליו באופן אלקטרוני.'
   };
 }
+
+function isValidIsraeliId(value){
+  const digits=String(value || '').replace(/\D/g, '');
+  if(!/^\d{5,9}$/.test(digits)) return false;
+  const padded=digits.padStart(9, '0');
+  let sum=0;
+  for(let i=0;i<9;i++){
+    let n=Number(padded[i]) * ((i % 2) + 1);
+    if(n > 9) n -= 9;
+    sum += n;
+  }
+  return sum % 10 === 0;
+}
 function validateRequiredFields(show=true){
   let missing=[]; requiredSignerFields.forEach(f=>{ const el=document.getElementById(f.id); if(!val(f.id)){missing.push(f.label); el.classList.add('field-error');} else el.classList.remove('field-error'); });
   const email=val('tenantEmail'); if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){missing.push('דואר אלקטרוני תקין'); document.getElementById('tenantEmail').classList.add('field-error');}
-  const id=val('tenantId'); if(id && !/^\d{5,10}$/.test(id.replace(/\D/g,''))){missing.push('מספר תעודת זהות תקין'); document.getElementById('tenantId').classList.add('field-error');}
+  const id=val('tenantId'); if(id && !isValidIsraeliId(id)){missing.push('מספר תעודת זהות ישראלית תקינה'); document.getElementById('tenantId').classList.add('field-error');}
   const box=document.getElementById('missingFieldsBox');
   if(show && missing.length){ box.innerHTML='<strong>לפני חתימה יש להשלים:</strong><br>'+missing.map(x=>'• '+x).join('<br>'); box.style.display='block'; }
   else box.style.display='none';
@@ -1436,39 +1449,102 @@ function renderAudit(){
   box.style.display='block';
 }
 
-function buildPdfRenderElement(){
-  const existing=document.getElementById('pdfRenderArea'); if(existing) existing.remove(); const d=lastSignatureData;
-  const wrapper=document.createElement('div'); wrapper.id='pdfRenderArea'; wrapper.className='pdf-render-area';
-  wrapper.innerHTML=`<div class="pdf-render-page"><div class="pdf-title"><img class="pdf-logo" src="tenant-signature-logo.png" alt="לוגו" /><h1>חוזה מספר ${escapeHtml(d.contractNumber||'')}</h1><div>תאריך: ${escapeHtml(new Date().toLocaleDateString('he-IL'))}</div></div>
+function buildPdfMetaPageHtml(d){
+  return `<div class="pdf-title"><img class="pdf-logo" src="tenant-signature-logo.png" alt="לוגו" /><h1>חוזה מספר ${escapeHtml(d.contractNumber||'')}</h1><div>תאריך: ${escapeHtml(new Date().toLocaleDateString('he-IL'))}</div></div>
   <div class="pdf-section-title">פרטי המשכיר</div><table class="pdf-table"><tr><th>שם מלא</th><th>תעודת זהות</th><th>טלפון נייד</th></tr><tr><td>${escapeHtml(d.landlordFullName||'')}</td><td>${escapeHtml(d.landlordId||'')}</td><td>${escapeHtml(d.landlordPhone||'')}</td></tr></table>
   <table class="pdf-table"><tr><th>כתובת המשכיר</th></tr><tr><td>${escapeHtml(d.landlordAddress||'')}</td></tr></table>
   <div class="pdf-section-title">פרטי השוכר</div><table class="pdf-table"><tr><th>שם השוכר</th><th>טלפון</th><th>תעודת זהות</th></tr><tr><td>${escapeHtml(d.tenantName)}</td><td>${escapeHtml(d.tenantPhone)}</td><td>${escapeHtml(d.tenantId)}</td></tr></table>
   <table class="pdf-table"><tr><th>כתובת מגורים</th><th>דואר אלקטרוני</th></tr><tr><td>${escapeHtml(d.homeAddress)}</td><td>${escapeHtml(d.tenantEmail)}</td></tr></table>
   <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>פרטי החדר</th></tr><tr><td>${escapeHtml(d.propertyBaseAddress || '')}</td><td>${escapeHtml(d.roomDetails || '')}</td></tr></table>
   <div style="font-size:18px;font-weight:bold;color:#0a355c;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;text-align:center;margin:8px 0 12px;">תקופת החוזה: ${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</div>
-  <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th><th>אמצעי תשלום</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td><td>${escapeHtml(d.paymentMethod)}</td></tr></table>
-  <div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text">${buildContractHtml(d)}</div>
-  <div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
-  <div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div></div>`;
-  document.body.appendChild(wrapper); return wrapper;
+  <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th><th>אמצעי תשלום</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td><td>${escapeHtml(d.paymentMethod)}</td></tr></table>`;
+}
+function buildPdfSignatureHtml(d){
+  return `<div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
+  <div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div>`;
+}
+function buildPdfRenderElement(){
+  const existing=document.getElementById('pdfRenderArea'); if(existing) existing.remove();
+  const d=lastSignatureData;
+  const wrapper=document.createElement('div');
+  wrapper.id='pdfRenderArea';
+  wrapper.className='pdf-render-area';
+  document.body.appendChild(wrapper);
+
+  const createPage=()=>{
+    const page=document.createElement('div');
+    page.className='pdf-render-page';
+    page.style.height='1123px';
+    page.style.minHeight='1123px';
+    page.style.overflow='hidden';
+    page.style.marginBottom='36px';
+    wrapper.appendChild(page);
+    return page;
+  };
+
+  const firstPage=createPage();
+  firstPage.innerHTML=buildPdfMetaPageHtml(d);
+
+  let currentPage=createPage();
+  currentPage.innerHTML='<div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text"></div>';
+  let currentText=currentPage.querySelector('.pdf-contract-text');
+  const maxPageHeight=1090;
+  const temp=document.createElement('div');
+  temp.innerHTML=buildContractHtml(d);
+  [...temp.children].forEach((node)=>{
+    const clone=node.cloneNode(true);
+    currentText.appendChild(clone);
+    if(currentPage.scrollHeight > maxPageHeight && currentText.children.length > 1){
+      currentText.removeChild(clone);
+      currentPage=createPage();
+      currentPage.innerHTML='<div class="pdf-contract-text"></div>';
+      currentText=currentPage.querySelector('.pdf-contract-text');
+      currentText.appendChild(clone);
+    }
+  });
+
+  const sigTemp=document.createElement('div');
+  sigTemp.innerHTML=buildPdfSignatureHtml(d);
+  [...sigTemp.children].forEach((node)=>{
+    const clone=node.cloneNode(true);
+    currentPage.appendChild(clone);
+    if(currentPage.scrollHeight > maxPageHeight && currentPage.children.length > 1){
+      currentPage.removeChild(clone);
+      currentPage=createPage();
+      currentPage.appendChild(clone);
+    }
+  });
+  return wrapper;
 }
 async function createSignedPdf(options={download:true, showPreview:true}){
   if(!lastSignatureData){ await signContract(); if(!lastSignatureData) return; }
-  showStatus('יוצר PDF באיכות תמונה כדי לשמור על עברית תקינה...','');
-  const renderEl=buildPdfRenderElement(); await new Promise(r=>setTimeout(r,150));
-  const canvas=await html2canvas(renderEl,{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794});
-  const imgData=canvas.toDataURL('image/jpeg',.98); const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const pageWidth=doc.internal.pageSize.getWidth(), pageHeight=doc.internal.pageSize.getHeight(); const imgWidth=pageWidth, imgHeight=canvas.height*imgWidth/canvas.width;
-  let heightLeft=imgHeight, position=0; doc.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight); heightLeft-=pageHeight;
-  while(heightLeft>0){ position=heightLeft-imgHeight; doc.addPage(); doc.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight); heightLeft-=pageHeight; }
-  renderEl.remove(); if(lastPdfUrl) URL.revokeObjectURL(lastPdfUrl); const blob=doc.output('blob'); lastPdfBlob=blob; lastPdfUrl=URL.createObjectURL(blob);
+  showStatus('יוצר PDF ומסדר את החוזה לעמודים ללא חיתוך באמצע...', '');
+  const renderEl=buildPdfRenderElement();
+  await new Promise(r=>setTimeout(r,250));
+  const pages=[...renderEl.querySelectorAll('.pdf-render-page')];
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pageWidth=doc.internal.pageSize.getWidth();
+  const pageHeight=doc.internal.pageSize.getHeight();
+  for(let i=0;i<pages.length;i++){
+    const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794});
+    const imgData=canvas.toDataURL('image/jpeg',.98);
+    if(i>0) doc.addPage();
+    doc.addImage(imgData,'JPEG',0,0,pageWidth,pageHeight);
+  }
+  renderEl.remove();
+  if(lastPdfUrl) URL.revokeObjectURL(lastPdfUrl);
+  const blob=doc.output('blob');
+  lastPdfBlob=blob;
+  lastPdfUrl=URL.createObjectURL(blob);
   const frame=document.getElementById('pdfFrame');
   if(options.showPreview){ frame.src=lastPdfUrl; frame.style.display='block'; }
   else { frame.style.display='none'; }
-  const filename=`signed_contract_${(lastSignatureData.tenantId||'tenant').replace(/\D/g,'')||'tenant'}.pdf`; lastPdfFileName=filename;
+  const filename=`signed_contract_${(lastSignatureData.tenantId||'tenant').replace(/\D/g,'')||'tenant'}.pdf`;
+  lastPdfFileName=filename;
   if(options.download){ const a=document.createElement('a'); a.href=lastPdfUrl; a.download=filename; a.click(); }
   showStatus(options.download ? 'נוצר PDF חתום. עכשיו אפשר לשלוח למערכת.' : 'מכין את החוזה החתום לשליחה...', 'success');
 }
+
 async function shareSignedPdf(){
   if(!lastPdfBlob){
     showStatus('קודם צריך ליצור PDF חתום. לחץ/י על "צור PDF חתום" ואז נסה/י לשתף.', 'error');
@@ -1564,7 +1640,7 @@ async function uploadSignedPdfToSupabase(){
       storage_bucket:bucket,
       storage_path:path,
       signer_user_agent:lastSignatureData?.userAgent || navigator.userAgent,
-      raw_data:{...(lastSignatureData || {}), uploadedFromSignerPageAt:new Date().toISOString()}
+      raw_data:{...(lastSignatureData || {}), publicToken: currentBaseData?.publicToken || lastSignatureData?.publicToken || '', pendingSignatureId: currentBaseData?.pendingSignatureId || lastSignatureData?.pendingSignatureId || pendingId || '', pdfUrl: lastUploadedPdfUrl, pdf_url: lastUploadedPdfUrl, storagePath: path, uploadedFromSignerPageAt:new Date().toISOString()}
     };
     const pendingId=lastSignatureData?.pendingSignatureId || currentBaseData?.pendingSignatureId;
     let savedData, saveError;
