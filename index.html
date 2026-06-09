@@ -74,6 +74,7 @@
     .hidden { display:none!important; }
     .pdf-render-area { position:fixed; right:-10000px; top:0; width:794px; background:white; color:#111827; padding:36px; direction:rtl; font-family:Arial,Tahoma,sans-serif; line-height:1.55; }
     .pdf-render-page { background:white; width:100%; min-height:1123px; padding:0; }
+    .pdf-page-header { display:flex; justify-content:space-between; align-items:center; direction:rtl; font-size:12px; color:#475569; border-bottom:1px solid #e5e7eb; padding:0 0 7px 0; margin:0 0 12px 0; }
     .pdf-title { text-align:center; color:var(--blue-dark); border-bottom:4px solid var(--blue); padding-bottom:14px; margin-bottom:18px; }
     .pdf-title h1 { margin:0 0 8px 0; font-size:28px; }
     .pdf-section-title { background:var(--blue); color:white; padding:9px 13px; border-radius:8px; margin:16px 0 10px 0; font-weight:bold; }
@@ -1532,6 +1533,32 @@ function normalizePdfHighlightsForCapture(renderEl){
   });
 }
 
+function addPdfPageHeaders(pages){
+  if(!pages || !pages.length) return;
+
+  const generatedAt=new Date().toLocaleString('he-IL', {
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit'
+  });
+
+  const total=pages.length;
+
+  pages.forEach((page, index)=>{
+    const oldHeader=page.querySelector('.pdf-page-header');
+    if(oldHeader) oldHeader.remove();
+
+    const header=document.createElement('div');
+    header.className='pdf-page-header';
+    header.innerHTML=`<span>תאריך ושעה: ${escapeHtml(generatedAt)}</span><span>דף ${index+1} מתוך ${total} דפים</span>`;
+
+    page.insertBefore(header, page.firstChild);
+  });
+}
+
 async function createSignedPdf(options={download:true, showPreview:true}){
   if(!lastSignatureData){ await signContract(); if(!lastSignatureData) return; }
   showStatus('יוצר PDF ומסדר את החוזה לעמודים ללא חיתוך באמצע...', '');
@@ -1539,6 +1566,7 @@ async function createSignedPdf(options={download:true, showPreview:true}){
   normalizePdfHighlightsForCapture(renderEl);
   await new Promise(r=>setTimeout(r,250));
   const pages=[...renderEl.querySelectorAll('.pdf-render-page')];
+  addPdfPageHeaders(pages);
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const pageWidth=doc.internal.pageSize.getWidth();
   const pageHeight=doc.internal.pageSize.getHeight();
@@ -1926,6 +1954,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
