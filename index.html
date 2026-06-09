@@ -1534,7 +1534,11 @@ async function createSignedPdf(options={download:true, showPreview:true}){
   const pageWidth=doc.internal.pageSize.getWidth();
   const pageHeight=doc.internal.pageSize.getHeight();
   for(let i=0;i<pages.length;i++){
-    const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794});
+    const pageEl=pages[i];
+    const captureHeight=Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123);
+    pageEl.style.height=captureHeight+'px';
+    pageEl.style.minHeight=captureHeight+'px';
+    const canvas=await html2canvas(pageEl,{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794,height:captureHeight});
     const imgData=canvas.toDataURL('image/jpeg',.98);
     if(i>0) doc.addPage();
     const pdfMarginX=10;
@@ -1861,6 +1865,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
