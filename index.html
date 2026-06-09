@@ -1,5 +1,1509 @@
-<<<SIGNATURE_PATCH
---- FIND ---
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>חוזה חתימה - GitHub fixed v45</title>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --blue:#0f4c81; --blue-dark:#0a355c; --orange:#f59e0b; --green:#16a34a; --red:#dc2626; --gray:#f3f4f6; --border:#d1d5db; --text:#111827; --purple:#7c3aed; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:Arial,Tahoma,sans-serif; background:#eef2f7; color:var(--text); line-height:1.5; }
+    .page { max-width:1280px; margin:0 auto; padding:24px; }
+    .topbar { background:linear-gradient(135deg,var(--blue),var(--blue-dark)); color:white; border-radius:18px; padding:24px; margin-bottom:20px; box-shadow:0 8px 22px rgba(15,76,129,.22); }
+    .topbar h1 { margin:0 0 8px 0; font-size:28px; }
+    .topbar p { margin:0; opacity:.95; font-size:15px; }
+    .tabs { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    #tabs, #adminPanel { display:none !important; }
+    .tab { background:white; color:var(--blue-dark); border:1px solid #dbeafe; box-shadow:0 3px 10px rgba(0,0,0,.07); }
+    .tab.active { background:var(--blue); color:white; }
+    .grid { display:grid; grid-template-columns:430px 1fr; gap:18px; align-items:start; }
+    .card { background:white; border-radius:16px; padding:18px; box-shadow:0 4px 16px rgba(0,0,0,.08); border:1px solid #e5e7eb; }
+    .card h2 { margin:0 0 14px 0; font-size:20px; color:var(--blue-dark); border-bottom:2px solid #e5e7eb; padding-bottom:8px; }
+    .subhead { color:#475569; font-size:14px; margin-top:-6px; margin-bottom:12px; }
+    label { display:block; font-weight:bold; margin:10px 0 5px; }
+    .required::after { content:' *'; color:var(--red); }
+    input, textarea, select { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:15px; font-family:inherit; background:#fff; }
+    input[readonly] { background:#f8fafc; color:#475569; }
+    textarea { min-height:76px; resize:vertical; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    button, .linkbtn { border:none; border-radius:10px; padding:10px 14px; cursor:pointer; font-size:15px; font-weight:bold; color:white; background:var(--blue); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+    button:hover,.linkbtn:hover { filter:brightness(.95); }
+    .btn-green{background:var(--green);} .btn-orange{background:var(--orange);} .btn-red{background:var(--red);} .btn-gray{background:#6b7280;} .btn-purple{background:var(--purple);} 
+    .copy-box { margin-top:12px; display:none; }
+    .copy-box textarea { direction:ltr; text-align:left; min-height:80px; font-size:13px; }
+    .contract-box { background:white; border-radius:16px; padding:22px; min-height:760px; border:1px solid #e5e7eb; box-shadow:0 4px 16px rgba(0,0,0,.08); }
+    .contract-header { text-align:center; border-bottom:3px solid var(--blue); padding-bottom:12px; margin-bottom:16px; }
+    .contract-header h2 { margin:0; font-size:25px; color:var(--blue-dark); }
+    .contract-meta { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:16px 0; }
+    .property-meta { grid-template-columns:1fr 1fr; }
+    .contract-period { margin:14px 0 18px; padding:13px 16px; border:1px solid #bfdbfe; background:#eff6ff; color:var(--blue-dark); border-radius:12px; font-size:19px; font-weight:bold; text-align:center; }
+    .meta-item { padding:10px; border-left:1px solid var(--border); background:#f9fafb; }
+    .meta-item:last-child{border-left:none;} .meta-item strong{display:block;color:var(--blue-dark);} 
+    .section-title { background:var(--blue); color:white; padding:8px 12px; border-radius:10px; margin-top:16px; font-weight:bold; }
+    .contract-text { white-space:normal; font-size:22px; line-height:1.32; }
+    .contract-text p { margin:0 0 5px 0; }
+    .contract-text p.sub-clause, .contract-text p.standalone-clause { margin-right:34px; padding-right:12px; }
+    .contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; display:inline-block; vertical-align:text-bottom; line-height:1; }
+    .contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-top:12px; font-weight:800; }
+    .contract-text p:last-child { margin-bottom:0; }
+    .sign-area { margin-top:16px; border:2px dashed var(--border); border-radius:14px; padding:12px; background:#fbfdff; }
+    #signatureCanvas { width:100%; height:210px; border:1px solid #cbd5e1; border-radius:12px; background:white; touch-action:none; }
+    .checkbox-line { display:flex; gap:10px; align-items:flex-start; margin:12px 0; font-weight:bold; }
+    .checkbox-line input { width:auto; margin-top:5px; }
+    .status { margin-top:12px; padding:12px; border-radius:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-weight:bold; display:none; }
+    .status.error{background:#fef2f2;border-color:#fecaca;color:#991b1b;} .status.success{background:#ecfdf5;border-color:#bbf7d0;color:#166534;}
+    .audit { margin-top:16px; background:#f9fafb; border:1px solid var(--border); border-radius:12px; padding:12px; font-size:14px; display:none; }
+    .audit h3 { margin:0 0 8px 0; color:var(--blue-dark); }
+    .small-note { font-size:13px; color:#6b7280; margin-top:8px; }
+    .records-table-wrap { overflow:auto; margin-top:10px; border:1px solid var(--border); border-radius:12px; }
+    .records-table { width:100%; border-collapse:collapse; min-width:760px; font-size:13px; background:white; }
+    .records-table th { background:#eaf2fb; color:var(--blue-dark); border-bottom:1px solid var(--border); padding:8px; text-align:right; white-space:nowrap; }
+    .records-table td { border-bottom:1px solid #eef2f7; padding:8px; vertical-align:top; }
+    .records-table tr:last-child td { border-bottom:none; }
+    .pill { display:inline-block; padding:3px 8px; border-radius:999px; background:#dcfce7; color:#166534; font-weight:bold; font-size:12px; white-space:nowrap; }
+
+    .field-error { border-color:var(--red)!important; background:#fff7f7!important; }
+    .error-list { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:10px 12px; border-radius:12px; margin:10px 0; display:none; }
+    .pdf-frame { width:100%; min-height:620px; border:1px solid var(--border); border-radius:12px; margin-top:12px; display:none; }
+    .hidden { display:none!important; }
+    .pdf-render-area { position:fixed; right:-10000px; top:0; width:794px; background:white; color:#111827; padding:36px; direction:rtl; font-family:Arial,Tahoma,sans-serif; line-height:1.55; }
+    .pdf-render-page { background:white; width:100%; min-height:1123px; padding:0; }
+    .pdf-title { text-align:center; color:var(--blue-dark); border-bottom:4px solid var(--blue); padding-bottom:14px; margin-bottom:18px; }
+    .pdf-title h1 { margin:0 0 8px 0; font-size:28px; }
+    .pdf-section-title { background:var(--blue); color:white; padding:9px 13px; border-radius:8px; margin:16px 0 10px 0; font-weight:bold; }
+    .pdf-table { width:100%; border-collapse:collapse; margin-bottom:12px; table-layout:fixed; }
+    .pdf-table th { background:#f3f4f6; color:var(--blue-dark); border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; }
+    .pdf-table td { border:1px solid var(--border); padding:8px; text-align:right; font-size:14px; word-break:break-word; }
+    .pdf-contract-text { white-space:normal; font-size:20px; line-height:1.32; }
+    .pdf-contract-text p { margin:0 0 5px 0; }
+    .pdf-contract-text p.sub-clause, .pdf-contract-text p.standalone-clause { margin-right:30px; padding-right:10px; }
+    .pdf-contract-text .highlight-value { font-size:1em; font-weight:800; color:#0a355c; display:inline; vertical-align:baseline; line-height:inherit; position:relative; top:0; }
+    .pdf-contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:10px; font-weight:800; }
+    .pdf-contract-text p:last-child { margin-bottom:0; }
+    .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .pdf-signature img { width:260px; height:auto; display:block; margin-top:8px; }
+    .pdf-audit { font-size:13px; margin-top:12px; background:#f9fafb; border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .ltr { direction:ltr; unicode-bidi:embed; word-break:break-all; text-align:left; }
+    @media (max-width:950px){ .grid{grid-template-columns:1fr;} .contract-meta{grid-template-columns:1fr;} .meta-item{border-left:none;border-bottom:1px solid var(--border);} .meta-item:last-child{border-bottom:none;} .page{padding:14px;} }
+
+    /* גרסה 34 - הזחת סעיפי משנה ממוספרים */
+    .tabs, #adminPanel { display:none !important; }
+    body.signer-only #signerPanel { display:grid !important; }
+    @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
+    .tabs, #adminPanel { display: none !important; }
+
+    body.preview-mode .topbar p { font-size: 16px; }
+    body.preview-mode #signerPanel { grid-template-columns: 1fr !important; }
+    body.preview-mode #signerPanel > .card:first-child,
+    body.preview-mode .sign-area,
+    body.preview-mode #auditBox,
+    body.preview-mode #uploadResultBox,
+    body.preview-mode #pdfFrame { display: none !important; }
+    body.preview-mode .contract-box::before {
+      content: "תצוגה מקדימה בלבד - לא נשלח לחתימה ולא נשמר בענן";
+      display: block;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .signature-logo {
+      width: 96px;
+      height: auto;
+      max-height: 72px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 10px;
+    }
+    .topbar .signature-logo {
+      width: 92px;
+      margin: 0 0 10px auto;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,.18));
+    }
+    .pdf-logo {
+      width: 92px;
+      height: auto;
+      display: block;
+      margin: 0 auto 10px;
+      object-fit: contain;
+    }
+
+    /* v45 - מצב חוזה שכבר נחתם / לאחר שליחה */
+    body.signed-completed .sign-area,
+    body.signed-completed #signerPanel > .card:first-child { display:none !important; }
+    .signed-completed-notice {
+      margin: 14px 0;
+      padding: 16px;
+      border-radius: 14px;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-weight: 800;
+      line-height: 1.7;
+    }
+    .signed-completed-notice .linkbtn { margin-top: 10px; }
+
+</style>
+</head>
+<body class="signer-only">
+<div class="page">
+  <div class="topbar">
+    <img class="signature-logo" src="tenant-signature-logo.png" alt="לוגו" onerror="this.style.display='none'" />
+    <h1>חוזה מספר <span id="topContractNumber"></span></h1>
+    <p>יש להשלים את שדות החובה, לחתום וללחוץ על שלח.</p>
+  </div>
+
+  <div class="tabs">
+    <button id="adminTab" class="tab active" onclick="setMode('admin')">צד מנהל - יצירת קישור</button>
+    <button id="signerTab" class="tab" onclick="setMode('signer')">צד שוכר - חתימה</button>
+  </div>
+
+  <div id="adminPanel" class="grid">
+    <div class="card">
+      <h2>פרטים שאתה ממלא</h2>
+      <div class="subhead">כאן תמלא את מה שאתה כבר יודע. השדות החסרים יישארו למילוי השוכר.</div>
+
+      <div class="local-warning" id="localWarning" style="display:none;">
+        אתה מריץ את הדמו כקובץ מקומי במחשב. קישור חתימה כזה יעבוד רק במחשב שלך. כדי לשלוח לטלפון, העלה את הקובץ ל־GitHub Pages / שרת IIS פנימי, ואז הדבק כאן את הכתובת הציבורית של הדף.
+      </div>
+
+      <label>כתובת ציבורית של דף החתימה, אופציונלי</label>
+      <input id="publicBaseUrl" value="https://noam01234.github.io/tenant-signature/" placeholder="לדוגמה: https://noam01234.github.io/tenant-signature/" />
+      <div class="small-note">אם השדה ריק, הקישור ייווצר לפי הכתובת הנוכחית. בקובץ מקומי זה יהיה file:/// ולכן לא ייפתח בטלפון.</div>
+
+      <div class="section-title" style="margin-top:16px;">חיבור Supabase</div>
+      <label>Supabase Project URL</label>
+      <input id="a_supabaseUrl" value="https://erhfqlcfwjqehffxetbv.supabase.co" placeholder="לדוגמה: https://xxxx.supabase.co" />
+
+      <label>Supabase Publishable / Anon Key</label>
+      <input id="a_supabaseAnonKey" placeholder="sb_publishable_xxx או anon public key" />
+      <div class="small-note">לא להדביק כאן Service Role או Secret Key. בדף ציבורי משתמשים רק ב־publishable/anon key עם Policies מתאימות.</div>
+
+      <div class="row">
+        <div><label>שם Bucket</label><input id="a_supabaseBucket" value="signed-contracts" /></div>
+        <div><label>שם טבלה</label><input id="a_supabaseTable" value="tenant_signatures" /></div>
+      </div>
+
+      <label>מספר WhatsApp שלך לקבלת קישור, אופציונלי</label>
+      <input id="a_ownerWhatsapp" value="972545668879" placeholder="לדוגמה: 972501234567" />
+      <div class="small-note">אם תמלא מספר בפורמט בינלאומי בלי +, כפתור WhatsApp יפתח הודעה ישירות אליך. אם תשאיר ריק, השוכר יבחר למי לשלוח.</div>
+
+      <div class="section-title" style="margin-top:16px;">פרטי מעקב חוזה</div>
+      <div class="row">
+        <div><label>מספר חוזה</label><input id="a_contractNumber" placeholder="לדוגמה: 000001" /></div>
+        <div><label>סטטוס חתימה</label><input id="a_signatureStatus" value="ממתין לחתימה" readonly /></div>
+        <div><label>סוג רשומה</label><input id="a_personStatus" value="מועמד" readonly /></div>
+      </div>
+      <div class="small-note">מספר החוזה יהיה מספר רץ בן 6 ספרות, למשל 000001. אם השדה ריק, המערכת תבקש את המספר הבא מ־Supabase בזמן יצירת קישור החתימה.</div>
+
+      <label>שם מלא של השוכר</label>
+      <input id="a_tenantName" value="ישראל ישראלי" />
+
+      <label>טלפון נייד</label>
+      <input id="a_tenantPhone" value="050-0000000" />
+
+      <label>כתובת המושכר</label>
+      <input id="a_propertyAddress" value="רחוב הדוגמה 10, תל אביב" />
+
+      <div class="row-3">
+        <div><label>בניין</label><input id="a_building" value="A" /></div>
+        <div><label>דירה</label><input id="a_apartment" value="12" /></div>
+        <div><label>חדר</label><input id="a_room" value="1" /></div>
+      </div>
+
+      <div class="row">
+        <div><label>תחילת שכירות</label><input id="a_startDate" type="date" /></div>
+        <div><label>סיום שכירות</label><input id="a_endDate" type="date" /></div>
+      </div>
+
+      <div class="row">
+        <div><label>שכירות חודשית</label><input id="a_rentAmount" value="3,500" /></div>
+        <div><label>פיקדון</label><input id="a_depositAmount" value="3,500" /></div>
+      </div>
+
+      <label>תנאים נוספים</label>
+      <textarea id="a_extraTerms">השוכר מתחייב לשמור על תקינות החדר והרכוש המשותף, לשלם בזמן את דמי השכירות ואת חלקו בתשלומי חשמל ומים.</textarea>
+
+      <div class="btns">
+        <button onclick="previewAdminContract()">רענן תצוגה</button>
+        <button class="btn-green" onclick="createSigningLink()">צור קישור חתימה</button>
+        <button class="btn-gray" onclick="loadAdminDemoData()">טען נתוני דמו</button>
+      </div>
+
+      <div id="adminStatus" class="status"></div>
+
+      <div id="linkBox" class="copy-box">
+        <label>קישור חתימה שנוצר</label>
+        <textarea id="signingLink" readonly></textarea>
+        <div class="btns">
+          <button class="btn-purple" onclick="copySigningLink()">העתק קישור</button>
+          <button class="btn-green" onclick="openSigningLink()">פתח לבדיקה</button>
+          <a id="whatsappLink" class="linkbtn btn-green" href="#" target="_blank">שלח ב־WhatsApp</a>
+        </div>
+        <div class="small-note">בדמו הנתונים נמצאים בתוך הקישור עצמו. במערכת אמיתית נחליף זאת ב־token חד־פעמי שמושך נתונים משרת.</div>
+      </div>
+
+      <div class="section-title" style="margin-top:18px;">מעקב חתימות שנשמרו</div>
+      <div class="small-note">הטבלה נטענת מ־Supabase לפי ה־Project URL, ה־Publishable Key, שם ה־Bucket ושם הטבלה שמילאת למעלה.</div>
+      <div class="btns">
+        <button class="btn-purple" onclick="loadSignedRecords()">טען חתימות מ־Supabase</button>
+        <button class="btn-gray" onclick="clearRecordsView()">נקה תצוגה</button>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div><label>סינון תצוגה</label><select id="recordsFilter" onchange="loadSignedRecords()"><option value="all">הצג הכל</option><option value="candidate">הצג מועמדים</option><option value="signed">הצג שוכרים פעילים / חתומים</option><option value="not_signed">הצג לא חתמו</option></select></div>
+      </div>
+      <div class="btns">
+        <button class="btn-red" onclick="deleteRecordsByType('candidate')">מחק את כל המועמדים</button>
+        <button class="btn-red" onclick="deleteRecordsByType('not_signed')">מחק את כל הלא חתמו</button>
+      </div>
+      <div class="small-note">המחיקה המרוכזת לא נוגעת בשוכרים פעילים/חוזים חתומים. לפני מחיקה תופיע הודעת אישור.</div>
+      <div id="recordsStatus" class="status"></div>
+      <div id="recordsBox" class="audit" style="display:none;">
+        <h3>חתימות אחרונות</h3>
+        <div id="recordsSummary" class="small-note"></div>
+        <div class="records-table-wrap"><table class="records-table" id="recordsTable"></table></div>
+      </div>
+    </div>
+
+    <div><div class="contract-box" id="adminPreview"></div></div>
+  </div>
+
+  <div id="signerPanel" class="grid">
+    <div class="card">
+      <h2>פרטים להשלמה על ידי השוכר</h2>
+      <div class="subhead">שדות עם כוכבית הם חובה. אי אפשר לחתום לפני מילוי כל שדות החובה.</div>
+      <div id="missingFieldsBox" class="error-list"></div>
+
+      <label>שם מלא</label>
+      <input id="tenantName" readonly />
+
+      <label>טלפון נייד</label>
+      <input id="tenantPhone" readonly />
+
+      <label class="required">תעודת זהות</label>
+      <input id="tenantId" inputmode="numeric" placeholder="הקלד/י מספר תעודת זהות" />
+
+      <label class="required">כתובת מגורים מלאה</label>
+      <input id="homeAddress" placeholder="רחוב, מספר, עיר" />
+
+      <label>דואר אלקטרוני (לא חובה)</label>
+      <input id="tenantEmail" type="email" placeholder="name@example.com" />
+
+      <select id="paymentMethod" class="hidden" aria-hidden="true">
+        <option value=""></option>
+      </select>
+      <textarea id="tenantNotes" class="hidden" aria-hidden="true"></textarea>
+
+      <div class="small-note">לאחר החתימה ולחיצה על שלח, החוזה החתום יישמר במערכת.</div>
+    </div>
+
+    <div>
+      <div class="contract-box" id="contractBox">
+        <div class="contract-header"><img class="signature-logo" src="tenant-signature-logo.png" alt="לוגו" onerror="this.style.display='none'" /><h2>חוזה מספר <span id="viewContractNumber"></span></h2><div id="contractDate"></div></div>
+        <div class="section-title">פרטי המשכיר</div>
+        <div class="contract-meta">
+          <div class="meta-item"><strong>שם מלא</strong><span id="viewLandlordFullName"></span></div>
+          <div class="meta-item"><strong>תעודת זהות</strong><span id="viewLandlordId"></span></div>
+          <div class="meta-item"><strong>טלפון נייד</strong><span id="viewLandlordPhone"></span></div>
+        </div>
+        <div class="contract-meta">
+          <div class="meta-item"><strong>כתובת</strong><span id="viewLandlordAddress"></span></div>
+        </div>
+        <div class="section-title">פרטי השוכר</div>
+        <div class="contract-meta">
+          <div class="meta-item"><strong>שם השוכר</strong><span id="viewTenantName"></span></div>
+          <div class="meta-item"><strong>טלפון</strong><span id="viewTenantPhone"></span></div>
+          <div class="meta-item"><strong>תעודת זהות</strong><span id="viewTenantId"></span></div>
+        </div>
+        <div class="contract-meta">
+          <div class="meta-item"><strong>כתובת מגורים</strong><span id="viewHomeAddress"></span></div>
+          <div class="meta-item"><strong>דואר אלקטרוני</strong><span id="viewTenantEmail"></span></div>
+        </div>
+        <div class="section-title">פרטי הנכס</div>
+        <div class="contract-meta property-meta">
+          <div class="meta-item"><strong>כתובת הנכס</strong><span id="viewPropertyBaseAddress"></span></div>
+          <div class="meta-item"><strong>פרטי החדר</strong><span id="viewRoomDetails"></span></div>
+        </div>
+        <div class="contract-period" id="viewContractPeriod"></div>
+        <div class="section-title">עיקרי ההסכם</div>
+        <div class="contract-text" id="contractText"></div>
+        <div class="section-title">חתימת השוכר</div>
+        <div class="sign-area">
+          <div class="checkbox-line"><input id="approveTerms" type="checkbox" /><span>אני מאשר/ת שקראתי את החוזה, השלמתי את הפרטים הנכונים, הבנתי את תנאיו, ואני מסכים/ה לחתום עליו באופן אלקטרוני.</span></div>
+          <canvas id="signatureCanvas"></canvas>
+          <div class="btns">
+            <button class="btn-gray" onclick="clearSignature()">נקה חתימה</button>
+            <button class="btn-green" onclick="submitSignedContract()">שלח</button>
+          </div>
+          <div class="small-note">בטלפון אפשר לחתום עם האצבע. לאחר החתימה לחץ/י על "שלח" בלבד.</div>
+        </div>
+        <div id="statusBox" class="status"></div>
+        <div id="uploadResultBox" class="audit"><h3>החוזה נשלח</h3><div id="uploadResultDetails"></div></div>
+        <div id="auditBox" class="audit"><h3>תיעוד חתימה</h3><div id="auditDetails"></div></div>
+      </div>
+      <iframe id="pdfFrame" class="pdf-frame"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+let signaturePad, lastSignatureData=null, lastPdfUrl=null, lastPdfBlob=null, lastPdfFileName=null, lastUploadedPdfUrl=null, lastUploadedStoragePath=null, lastInsertedRow=null, currentBaseData={}, isPreviewMode=false;
+const adminIds=['contractNumber','signatureStatus','personStatus','landlordFullName','landlordAddress','landlordId','landlordPhone','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount','depositAmount','municipalTaxAmount','extraTerms','supabaseUrl','supabaseAnonKey','supabaseBucket','supabaseTable','ownerWhatsapp'];
+const requiredSignerFields=[
+  {id:'tenantId', label:'תעודת זהות'},
+  {id:'homeAddress', label:'כתובת מגורים מלאה'}
+];
+function todayIso(){return new Date().toISOString().slice(0,10);} 
+function formatContractNumber(value){
+  const digits=String(value ?? '').replace(/\D/g,'');
+  if(!digits) return '';
+  return digits.padStart(6,'0').slice(-6);
+}
+function isValidContractNumber(value){ return /^\d{6}$/.test(String(value || '').trim()); }
+
+function sanitizeContractNumber(value){
+  const raw=String(value || '').trim();
+  if(/^\d{6}$/.test(raw)) return raw;
+  return '';
+}
+function enforceCurrentContractNumber(data){
+  const clean=sanitizeContractNumber(data?.contractNumber);
+  if(clean){ data.contractNumber=clean; return clean; }
+  data.contractNumber='';
+  return '';
+}
+async function refreshContractNumberFromPendingRecord(data){
+  const pendingId=data?.pendingSignatureId;
+  const supabaseUrl=(data?.supabaseUrl || '').trim().replace(/\/$/, '');
+  const supabaseAnonKey=(data?.supabaseAnonKey || '').trim();
+  const table=(data?.supabaseTable || 'tenant_signatures').trim();
+  if(!pendingId || !supabaseUrl || !supabaseAnonKey || !window.supabase?.createClient) return data;
+  try{
+    const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    const { data: row, error } = await client.from(table).select('contract_number, signature_status').eq('id', pendingId).single();
+    if(!error && row){
+      const clean=sanitizeContractNumber(row.contract_number);
+      if(clean) data.contractNumber=clean;
+      if(row.signature_status) data.signatureStatus=row.signature_status;
+    }
+  }catch(e){ console.warn('לא הצלחתי לרענן מספר חוזה מרשומת Supabase', e); }
+  return data;
+}
+async function getNextContractNumberFromSupabase(){
+  const supabaseUrl=val('a_supabaseUrl').replace(/\/$/, '');
+  const supabaseAnonKey=val('a_supabaseAnonKey');
+  if(!supabaseUrl || !supabaseAnonKey){
+    throw new Error('כדי ליצור מספר חוזה רץ צריך למלא Supabase Project URL ו־Supabase Publishable / Anon Key.');
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    throw new Error('ספריית Supabase לא נטענה. בדוק חיבור אינטרנט ונסה שוב.');
+  }
+  const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const { data, error } = await client.rpc('get_next_contract_number');
+  if(error) throw error;
+  const nextNumber=formatContractNumber(data);
+  if(!nextNumber) throw new Error('Supabase החזיר מספר חוזה ריק או לא תקין.');
+  return nextNumber;
+}
+async function ensureContractNumber(){
+  const current=val('a_contractNumber');
+  if(current){
+    const formatted=formatContractNumber(current);
+    if(!isValidContractNumber(formatted)) throw new Error('מספר חוזה חייב להיות 6 ספרות בלבד, לדוגמה 000001.');
+    setVal('a_contractNumber', formatted);
+    return formatted;
+  }
+  showBox('adminStatus','מקבל מספר חוזה רץ מ־Supabase...', '');
+  const nextNumber=await getNextContractNumberFromSupabase();
+  setVal('a_contractNumber', nextNumber);
+  previewAdminContract();
+  return nextNumber;
+}
+function generateContractNumber(){ return ''; }
+
+function addMonths(date,months){const d=new Date(date);d.setMonth(d.getMonth()+months);return d.toISOString().slice(0,10);} 
+function formatDate(dateStr){if(!dateStr)return ''; const p=dateStr.split('-'); return `${p[2]}/${p[1]}/${p[0]}`;}
+function calculateRentalMonths(startDate,endDate){
+  if(!startDate || !endDate) return '';
+  const s=new Date(startDate+'T00:00:00');
+  const e=new Date(endDate+'T00:00:00');
+  if(Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return '';
+
+  let months=(e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth());
+  const anniversary=new Date(s);
+  anniversary.setMonth(anniversary.getMonth()+months);
+
+  if(e < anniversary){
+    months -= 1;
+  } else {
+    const daysAfter=Math.floor((e-anniversary)/(1000*60*60*24));
+    // אם תקופת החוזה חורגת מהחודש המלא עד 5 ימים, מעגלים למטה ולא מוסיפים חודש.
+    if(daysAfter > 5) months += 1;
+  }
+
+  return String(Math.max(months,1));
+}
+function val(id){return document.getElementById(id)?.value?.trim() || '';} 
+function setVal(id,value){const el=document.getElementById(id); if(el) el.value=value ?? '';}
+function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function b64EncodeUnicode(str){return btoa(unescape(encodeURIComponent(str)));}
+function b64DecodeUnicode(str){return decodeURIComponent(escape(atob(str)));}
+function isStudioUnit(apartment, room){
+  const a=String(apartment||'').trim();
+  const r=String(room||'').trim();
+  return a==='סטודיו' || r==='סטודיו';
+}
+function buildPropertyBaseAddress(building){
+  const b=String(building||'').trim();
+  return b ? `נווה שאנן ${b} אריאל` : 'נווה שאנן אריאל';
+}
+function buildRoomDetails(apartment, room){
+  const a=String(apartment||'').trim();
+  const r=String(room||'').trim();
+  if(isStudioUnit(a, r)) return 'דירת סטודיו';
+  const parts=[];
+  if(a) parts.push(`קומה ${a}`);
+  if(r) parts.push(r);
+  return parts.join(' ');
+}
+function buildSignerPropertyAddress(building, apartment, room){
+  const base=buildPropertyBaseAddress(building);
+  const details=buildRoomDetails(apartment, room);
+  return [base, details].filter(Boolean).join(', ');
+}
+function normalizePropertyAddress(data){
+  if(!data) return '';
+  data.propertyBaseAddress = data.propertyBaseAddress || buildPropertyBaseAddress(data.building);
+  data.roomDetails = data.roomDetails || buildRoomDetails(data.apartment, data.room);
+  const generated=buildSignerPropertyAddress(data.building, data.apartment, data.room);
+  data.propertyAddress = generated || data.propertyAddress || '';
+  return data.propertyAddress;
+}
+function showBox(id,msg,type=''){const box=document.getElementById(id); box.className='status '+type; box.innerText=msg; box.style.display='block';}
+function setMode(mode){
+  mode='signer';
+  document.getElementById('adminPanel').classList.add('hidden');
+  document.getElementById('signerPanel').classList.toggle('hidden',mode!=='signer');
+  const adminTab=document.getElementById('adminTab'); if(adminTab) adminTab.classList.remove('active');
+  const signerTab=document.getElementById('signerTab'); if(signerTab) signerTab.classList.add('active');
+  if(mode==='signer'){ setTimeout(()=>{ if(!signaturePad) initSignaturePad(); else resizeCanvas(); refreshContract(); },80); }
+}
+function getAdminData(){ const d={}; adminIds.forEach(id=>d[id]=val('a_'+id)); return d; }
+function loadAdminDemoData(){
+  setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד');
+  setVal('a_tenantName','ישראל ישראלי'); setVal('a_tenantPhone','050-0000000'); setVal('a_propertyAddress','רחוב הדוגמה 10, תל אביב');
+  setVal('a_building','A'); setVal('a_apartment','12'); setVal('a_room','1'); setVal('a_startDate',todayIso()); setVal('a_endDate',addMonths(new Date(),12));
+  setVal('a_rentAmount','3,500'); setVal('a_depositAmount','3,500'); setVal('publicBaseUrl','https://noam01234.github.io/tenant-signature/'); setVal('a_supabaseUrl','https://erhfqlcfwjqehffxetbv.supabase.co'); setVal('a_supabaseBucket', val('a_supabaseBucket') || 'signed-contracts'); setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures'); setVal('a_ownerWhatsapp','972545668879');
+  setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד'); setVal('a_extraTerms','השוכר מתחייב לשמור על תקינות החדר והרכוש המשותף, לשלם בזמן את דמי השכירות ואת חלקו בתשלומי חשמל ומים.');
+  previewAdminContract(); showBox('adminStatus','נתוני הדמו נטענו.','success');
+}
+function adminContractHtml(data){
+  return `<div class="contract-header"><h2>תצוגה מקדימה - חוזה מספר ${escapeHtml(data.contractNumber||'')}</h2><div>תאריך: ${new Date().toLocaleDateString('he-IL')}</div></div>
+  <div class="contract-meta"><div class="meta-item"><strong>מספר חוזה</strong>${escapeHtml(data.contractNumber||'')}</div><div class="meta-item"><strong>סטטוס חתימה</strong>${escapeHtml(data.signatureStatus||'ממתין לחתימה')}</div><div class="meta-item"><strong>סוג רשומה</strong>${escapeHtml(data.personStatus||'מועמד')}</div></div>
+  <div class="section-title">פרטים שמולאו על ידי המנהל</div>
+  <div class="contract-meta"><div class="meta-item"><strong>שם השוכר</strong>${escapeHtml(data.tenantName)}</div><div class="meta-item"><strong>טלפון</strong>${escapeHtml(data.tenantPhone)}</div><div class="meta-item"><strong>כתובת המושכר</strong>${escapeHtml(data.propertyAddress)}</div></div>
+  <div class="contract-meta"><div class="meta-item"><strong>בניין / דירה / חדר</strong>בניין ${escapeHtml(data.building)}, דירה ${escapeHtml(data.apartment)}, חדר ${escapeHtml(data.room)}</div><div class="meta-item"><strong>תקופת שכירות</strong>${escapeHtml(formatDate(data.startDate))} עד ${escapeHtml(formatDate(data.endDate))}</div><div class="meta-item"><strong>שכירות / פיקדון</strong>${escapeHtml(data.rentAmount)} ₪ / ${escapeHtml(data.depositAmount)} ₪</div></div>
+  <div class="section-title">שדות שהשוכר ישלים</div>
+  <div class="contract-text">תעודת זהות, כתובת מגורים, דואר אלקטרוני, אמצעי תשלום, הערות אם יש.</div>
+  <div class="section-title">תנאים נוספים</div><div class="contract-text">${escapeHtml(data.extraTerms)}</div>`;
+}
+function previewAdminContract(){ document.getElementById('adminPreview').innerHTML=adminContractHtml(getAdminData()); }
+async function createPendingSignatureRecord(data){
+  const supabaseUrl=(data.supabaseUrl || '').trim().replace(/\/$/, '');
+  const supabaseAnonKey=(data.supabaseAnonKey || '').trim();
+  const table=(data.supabaseTable || 'tenant_signatures').trim();
+  if(!supabaseUrl || !supabaseAnonKey || !table){
+    throw new Error('כדי לפתוח חוזה בסטטוס ממתין לחתימה צריך למלא Supabase Project URL, Publishable/Anon Key ושם טבלה.');
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    throw new Error('ספריית Supabase לא נטענה. בדוק חיבור אינטרנט ונסה שוב.');
+  }
+  const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const row={
+    contract_number:data.contractNumber || null,
+    signature_status:'ממתין לחתימה',
+    person_status:'מועמד',
+    tenant_name:data.tenantName || null,
+    tenant_phone:data.tenantPhone || null,
+    tenant_id:null,
+    tenant_email:null,
+    property_address:data.propertyAddress || null,
+    building:data.building || null,
+    apartment:data.apartment || null,
+    room:data.room || null,
+    signed_at:null,
+    document_hash:null,
+    pdf_url:null,
+    storage_bucket:(data.supabaseBucket || 'signed-contracts').trim(),
+    storage_path:null,
+    signer_user_agent:navigator.userAgent,
+    raw_data:{...data, pendingCreatedAt:new Date().toISOString(), note:'נוצר קישור חתימה. ממתין לחתימת השוכר.'}
+  };
+  const { data: inserted, error } = await client.from(table).insert(row).select('id, created_at, contract_number, signature_status, person_status').single();
+  if(error) throw error;
+  if(!inserted || !inserted.id) throw new Error('הרשומה נוצרה אבל Supabase לא החזיר מזהה רשומה.');
+  return inserted.id;
+}
+async function createSigningLink(){
+  let contractNumber;
+  try{
+    contractNumber=await ensureContractNumber();
+  }catch(e){
+    showBox('adminStatus','לא הצלחתי ליצור מספר חוזה רץ: '+(e?.message || String(e)), 'error');
+    return;
+  }
+  const data=getAdminData();
+  data.contractNumber=contractNumber; setVal('a_contractNumber', contractNumber);
+  data.signatureStatus='ממתין לחתימה'; data.personStatus='מועמד'; setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד');
+  const missing=[];
+  ['contractNumber','tenantName','tenantPhone','propertyAddress','building','apartment','room','startDate','endDate','rentAmount'].forEach(k=>{if(!data[k]) missing.push(k);});
+  if(missing.length){showBox('adminStatus','יש למלא שם, טלפון, כתובת מושכר, בניין, דירה, חדר, תאריכים ושכירות חודשית. מספר חוזה יתקבל אוטומטית מ־Supabase אם השדה ריק.','error'); return;}
+  try{
+    showBox('adminStatus','יוצר רשומת חוזה בסטטוס ממתין לחתימה ב־Supabase...', '');
+    const pendingId=await createPendingSignatureRecord(data);
+    data.pendingSignatureId=pendingId;
+  }catch(e){
+    showBox('adminStatus','קישור החתימה לא נוצר כי לא הצלחתי לשמור רשומת ממתין לחתימה ב־Supabase: '+(e?.message || String(e)), 'error');
+    return;
+  }
+  const payload=b64EncodeUnicode(JSON.stringify(data));
+  const manualBase=(document.getElementById('publicBaseUrl')?.value || '').trim();
+  const currentBase=location.href.split('#')[0].split('?')[0];
+  let base=manualBase || currentBase;
+  if(base.includes('?')) base=base.split('?')[0];
+  if(base.includes('#')) base=base.split('#')[0];
+  const link=`${base}?mode=sign&data=${encodeURIComponent(payload)}`;
+  document.getElementById('signingLink').value=link;
+  document.getElementById('linkBox').style.display='block';
+  const msg=`שלום ${data.tenantName}, מצורף קישור לחתימה על חוזה השכירות. יש להשלים את שדות החובה ולחתום: ${link}`;
+  document.getElementById('whatsappLink').href='https://wa.me/?text='+encodeURIComponent(msg);
+  if(link.startsWith('file://')){
+    showBox('adminStatus','קישור החתימה נוצר, אבל הוא קישור מקומי file:/// ולכן לא ייפתח בטלפון. העלה את הקובץ לאחסון ציבורי והדבק את כתובת הדף בשדה כתובת ציבורית.','error');
+  } else {
+    showBox('adminStatus','קישור החתימה נוצר בהצלחה ונשמרה רשומה בסטטוס ממתין לחתימה. אפשר להעתיק, לפתוח לבדיקה או לשלוח ב־WhatsApp.','success');
+  }
+}
+async function copySigningLink(){ try{await navigator.clipboard.writeText(document.getElementById('signingLink').value); showBox('adminStatus','הקישור הועתק ללוח.','success');}catch(e){showBox('adminStatus','לא הצלחתי להעתיק אוטומטית. אפשר לסמן ולהעתיק ידנית.','error');} }
+function openSigningLink(){ const link=document.getElementById('signingLink').value; if(link) window.open(link,'_blank'); }
+function getSupabaseAdminClient(){
+  const supabaseUrl=val('a_supabaseUrl').replace(/\/$/, '');
+  const supabaseAnonKey=val('a_supabaseAnonKey');
+  if(!supabaseUrl || !supabaseAnonKey){
+    throw new Error('חסר Supabase Project URL או Publishable/Anon Key.');
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    throw new Error('ספריית Supabase לא נטענה. בדוק חיבור אינטרנט.');
+  }
+  return window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+}
+function clearRecordsView(){
+  document.getElementById('recordsBox').style.display='none';
+  document.getElementById('recordsTable').innerHTML='';
+  document.getElementById('recordsSummary').innerText='';
+  const st=document.getElementById('recordsStatus'); if(st) st.style.display='none';
+}
+function formatDateTime(value){
+  if(!value) return '';
+  try { return new Date(value).toLocaleString('he-IL'); } catch(e){ return String(value); }
+}
+async function loadSignedRecords(){
+  const table=(val('a_supabaseTable') || 'tenant_signatures').trim();
+  if(!table){ showBox('recordsStatus','חסר שם טבלה.', 'error'); return; }
+  showBox('recordsStatus','טוען חתימות מ־Supabase...', '');
+  try{
+    const client=getSupabaseAdminClient();
+    let query = client
+      .from(table)
+      .select('id, created_at, contract_number, signature_status, person_status, tenant_name, tenant_phone, tenant_id, tenant_email, property_address, building, apartment, room, signed_at, document_hash, pdf_url, storage_path')
+      .order('created_at', { ascending:false })
+      .limit(25);
+    const filter=(document.getElementById('recordsFilter')?.value || 'all');
+    if(filter==='candidate') query=query.eq('person_status','מועמד');
+    if(filter==='signed') query=query.eq('person_status','שוכר פעיל');
+    if(filter==='not_signed') query=query.or('person_status.eq.לא חתם,signature_status.eq.בוטל / לא חתם');
+    const { data, error } = await query;
+    if(error) throw error;
+    renderSignedRecords(data || []);
+    showBox('recordsStatus',`נטענו ${data?.length || 0} רשומות חתימה.`, 'success');
+  }catch(e){
+    const msg=e?.message || JSON.stringify(e) || String(e);
+    showBox('recordsStatus','טעינת החתימות נכשלה: '+msg, 'error');
+  }
+}
+function renderSignedRecords(rows){
+  const box=document.getElementById('recordsBox');
+  const summary=document.getElementById('recordsSummary');
+  const table=document.getElementById('recordsTable');
+  box.style.display='block';
+  if(!rows.length){
+    summary.innerText='לא נמצאו רשומות חתימה בטבלה.';
+    table.innerHTML='';
+    return;
+  }
+  summary.innerText=`מוצגות עד 25 החתימות האחרונות. לחיצה על "פתח PDF" תפתח את הקובץ החתום שנשמר ב־Storage.`;
+  table.innerHTML=`
+    <thead><tr>
+      <th>מספר חוזה</th><th>סוג רשומה</th><th>סטטוס חתימה</th><th>תאריך</th><th>שם</th><th>טלפון</th><th>ת.ז.</th><th>מושכר</th><th>מזהה חתימה</th><th>PDF</th><th>פעולות</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>{
+      const unit=[r.building&&('בניין '+r.building), r.apartment&&('דירה '+r.apartment), r.room&&('חדר '+r.room)].filter(Boolean).join(', ');
+      const hash=String(r.document_hash || '');
+      const shortHash=hash ? hash.slice(0,14)+'...' : '';
+      const pdf=r.pdf_url ? `<a class="linkbtn" href="${escapeHtml(r.pdf_url)}" target="_blank" style="padding:6px 10px;font-size:13px;">פתח PDF</a>` : '<span class="small-note">אין קישור</span>';
+      return `<tr>
+        <td class="ltr">${escapeHtml(r.contract_number || '')}</td>
+        <td><span class="pill">${escapeHtml(r.person_status || (r.signature_status==='נחתם' ? 'שוכר פעיל' : 'מועמד'))}</span></td>
+        <td><span class="pill">${escapeHtml(r.signature_status || 'נחתם')}</span></td>
+        <td>${escapeHtml(formatDateTime(r.signed_at || r.created_at))}</td>
+        <td>${escapeHtml(r.tenant_name || '')}</td>
+        <td class="ltr">${escapeHtml(r.tenant_phone || '')}</td>
+        <td class="ltr">${escapeHtml(r.tenant_id || '')}</td>
+        <td>${escapeHtml((r.property_address || '') + (unit ? ' | '+unit : ''))}</td>
+        <td class="ltr" title="${escapeHtml(hash)}">${escapeHtml(shortHash)}</td>
+        <td>${pdf}</td>
+        <td>${(r.signature_status==='ממתין לחתימה' || r.person_status==='מועמד') ? `<button class="btn-red" style="padding:6px 10px;font-size:13px;" onclick="markRecordNotSigned(${Number(r.id)})">סמן לא חתם</button>` : ''}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+
+async function markRecordNotSigned(recordId){
+  if(!recordId){ showBox('recordsStatus','מזהה רשומה חסר.', 'error'); return; }
+  if(!confirm('לסמן את הרשומה כ"לא חתם"? הפעולה לא מוחקת את הרשומה, רק משנה סטטוס.')) return;
+  try{
+    const client=getSupabaseAdminClient();
+    const table=(val('a_supabaseTable') || 'tenant_signatures').trim();
+    const { error } = await client.from(table).update({ person_status:'לא חתם', signature_status:'בוטל / לא חתם' }).eq('id', recordId);
+    if(error) throw error;
+    showBox('recordsStatus','הרשומה סומנה כלא חתם.', 'success');
+    await loadSignedRecords();
+  }catch(e){
+    showBox('recordsStatus','סימון לא חתם נכשל: '+(e?.message || String(e)), 'error');
+  }
+}
+async function deleteRecordsByType(type){
+  const label = type==='candidate' ? 'כל המועמדים' : 'כל הרשומות שסומנו לא חתמו';
+  const confirmText = type==='candidate'
+    ? 'למחוק את כל הרשומות מסוג מועמד? פעולה זו לא תמחק שוכרים פעילים/חתומים.'
+    : 'למחוק את כל הרשומות שסומנו לא חתמו? פעולה זו לא תמחק שוכרים פעילים/חתומים.';
+  if(!confirm(confirmText)) return;
+  try{
+    const client=getSupabaseAdminClient();
+    const table=(val('a_supabaseTable') || 'tenant_signatures').trim();
+    let query=client.from(table).delete();
+    if(type==='candidate') query=query.eq('person_status','מועמד');
+    else query=query.or('person_status.eq.לא חתם,signature_status.eq.בוטל / לא חתם');
+    const { error } = await query;
+    if(error) throw error;
+    showBox('recordsStatus','נמחקו '+label+'.', 'success');
+    await loadSignedRecords();
+  }catch(e){
+    showBox('recordsStatus','המחיקה נכשלה: '+(e?.message || String(e)), 'error');
+  }
+}
+
+async function applyBaseData(data){
+  data=data || {};
+  enforceCurrentContractNumber(data);
+  data=await refreshContractNumberFromPendingRecord(data);
+  enforceCurrentContractNumber(data);
+  if(!data.contractNumber){
+    console.warn('מספר חוזה חסר או לא תקין בקישור החתימה. יש ליצור קישור חדש מצד המנהל.');
+  }
+  normalizePropertyAddress(data);
+  currentBaseData=data;
+  setVal('tenantName',data.tenantName || ''); setVal('tenantPhone',data.tenantPhone || ''); setVal('tenantId',data.tenantId || ''); setVal('homeAddress',data.homeAddress || ''); setVal('tenantEmail',data.tenantEmail || ''); setVal('paymentMethod',data.paymentMethod || ''); setVal('tenantNotes',data.tenantNotes || ''); refreshContract();
+}
+async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
+  const supabaseUrl=(cfg?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co').trim().replace(/\/$/, '');
+  const supabaseAnonKey=(cfg?.supabaseAnonKey || '').trim();
+  const table=(cfg?.supabaseTable || 'tenant_signatures').trim();
+  const bucket=(cfg?.supabaseBucket || 'signed-contracts').trim();
+
+  if(!pendingId || !supabaseUrl || !supabaseAnonKey || !window.supabase?.createClient){
+    return null;
+  }
+
+  const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const { data: row, error } = await client
+    .from(table)
+    .select('*')
+    .eq('id', pendingId)
+    .single();
+
+  if(error) throw error;
+  if(!row) return null;
+
+  const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
+  return {
+    ...raw,
+    pendingSignatureId: pendingId,
+    contractNumber: sanitizeContractNumber(row.contract_number) || sanitizeContractNumber(raw.contractNumber),
+    signatureStatus: row.signature_status || raw.signatureStatus || 'ממתין לחתימה',
+    personStatus: row.person_status || raw.personStatus || 'מועמד',
+    tenantName: row.tenant_name || raw.tenantName || '',
+    tenantPhone: row.tenant_phone || raw.tenantPhone || '',
+    tenantId: row.tenant_id || raw.tenantId || '',
+    tenantEmail: row.tenant_email || raw.tenantEmail || '',
+    propertyAddress: row.property_address || raw.propertyAddress || '',
+    building: row.building || raw.building || '',
+    apartment: row.apartment || raw.apartment || '',
+    room: row.room || raw.room || '',
+    roomDetails: raw.roomDetails || buildRoomDetails(row.apartment || raw.apartment || '', row.room || raw.room || ''),
+    apartmentIntro: raw.apartmentIntro || '',
+    signedAt: row.signed_at || raw.signedAtIso || raw.signedAt || '',
+    documentHash: row.document_hash || raw.documentHash || '',
+    pdfUrl: row.pdf_url || raw.pdfUrl || raw.pdf_url || '',
+    storagePath: row.storage_path || raw.storagePath || '',
+    signerUserAgent: row.signer_user_agent || raw.userAgent || '',
+    rawData: raw,
+    isAlreadySigned: Boolean((row.signature_status === 'נחתם' || row.person_status === 'שוכר פעיל') && (row.pdf_url || row.signed_at || row.document_hash)),
+    supabaseUrl,
+    supabaseAnonKey,
+    supabaseBucket: bucket,
+    supabaseTable: table
+  };
+}
+
+async function fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg){
+  const token=String(publicToken || '').trim();
+  const supabaseUrl=(cfg?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co').trim().replace(/\/$/, '');
+  const supabaseAnonKey=(cfg?.supabaseAnonKey || '').trim();
+  const table=(cfg?.supabaseTable || 'tenant_signatures').trim();
+  const bucket=(cfg?.supabaseBucket || 'signed-contracts').trim();
+
+  if(!token || !supabaseUrl || !supabaseAnonKey || !window.supabase?.createClient){
+    return null;
+  }
+
+  const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const { data: row, error } = await client
+    .from(table)
+    .select('*')
+    .eq('raw_data->>publicToken', token)
+    .maybeSingle();
+
+  if(error) throw error;
+  if(!row) return null;
+
+  const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
+  return {
+    ...raw,
+    pendingSignatureId: row.id,
+    publicToken: token,
+    contractNumber: sanitizeContractNumber(row.contract_number) || sanitizeContractNumber(raw.contractNumber),
+    signatureStatus: row.signature_status || raw.signatureStatus || 'ממתין לחתימה',
+    personStatus: row.person_status || raw.personStatus || 'מועמד',
+    tenantName: row.tenant_name || raw.tenantName || '',
+    tenantPhone: row.tenant_phone || raw.tenantPhone || '',
+    tenantId: row.tenant_id || raw.tenantId || '',
+    tenantEmail: row.tenant_email || raw.tenantEmail || '',
+    propertyAddress: row.property_address || raw.propertyAddress || '',
+    building: row.building || raw.building || '',
+    apartment: row.apartment || raw.apartment || '',
+    room: row.room || raw.room || '',
+    roomDetails: raw.roomDetails || buildRoomDetails(row.apartment || raw.apartment || '', row.room || raw.room || ''),
+    apartmentIntro: raw.apartmentIntro || '',
+    signedAt: row.signed_at || raw.signedAtIso || raw.signedAt || '',
+    documentHash: row.document_hash || raw.documentHash || '',
+    pdfUrl: row.pdf_url || raw.pdfUrl || raw.pdf_url || '',
+    storagePath: row.storage_path || raw.storagePath || '',
+    signerUserAgent: row.signer_user_agent || raw.userAgent || '',
+    rawData: raw,
+    isAlreadySigned: Boolean((row.signature_status === 'נחתם' || row.person_status === 'שוכר פעיל') && (row.pdf_url || row.signed_at || row.document_hash)),
+    supabaseUrl,
+    supabaseAnonKey,
+    supabaseBucket: bucket,
+    supabaseTable: table
+  };
+}
+
+function normalizeB64Payload(value){
+  return String(value || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+}
+function decodeJsonPayload(value){
+  if(!value) return null;
+  let raw=String(value).trim();
+  try{ raw=decodeURIComponent(raw); }catch(e){}
+  try{ return JSON.parse(b64DecodeUnicode(normalizeB64Payload(raw))); }
+  catch(e1){
+    try{ return JSON.parse(atob(normalizeB64Payload(raw))); }
+    catch(e2){ console.error('שגיאה בפענוח נתוני גיבוי מהקישור', e1, e2); return null; }
+  }
+}
+function collectUrlParams(){
+  const params=new URLSearchParams(location.search || '');
+  let hash=location.hash || '';
+  if(hash.startsWith('#')) hash=hash.slice(1);
+  if(hash.startsWith('?')) hash=hash.slice(1);
+  if(hash){
+    const hashParams=new URLSearchParams(hash);
+    hashParams.forEach((value,key)=>{
+      if(!params.has(key)) params.set(key,value);
+    });
+  }
+  return params;
+}
+function parseJsonParam(params, name){
+  return decodeJsonPayload(params.get(name));
+}
+function firstParam(params, names){
+  for(const name of names){
+    const value=params.get(name);
+    if(value) return value;
+  }
+  return '';
+}
+function buildConfigFromParams(params, linkData){
+  const cfg={
+    pendingSignatureId: firstParam(params, ['id','pendingSignatureId','recordId']) || linkData?.pendingSignatureId || '',
+    publicToken: firstParam(params, ['t','token','publicToken']) || linkData?.publicToken || '',
+    supabaseUrl: firstParam(params, ['sb','supabaseUrl']) || linkData?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co',
+    supabaseAnonKey: firstParam(params, ['key','anon','supabaseAnonKey']) || linkData?.supabaseAnonKey || '',
+    supabaseBucket: firstParam(params, ['bucket','supabaseBucket']) || linkData?.supabaseBucket || 'signed-contracts',
+    supabaseTable: firstParam(params, ['table','supabaseTable']) || linkData?.supabaseTable || 'tenant_signatures'
+  };
+  cfg.publicToken=String(cfg.publicToken || '').trim();
+  cfg.supabaseUrl=String(cfg.supabaseUrl || '').trim().replace(/\/$/, '');
+  cfg.supabaseAnonKey=String(cfg.supabaseAnonKey || '').trim();
+  cfg.supabaseBucket=String(cfg.supabaseBucket || 'signed-contracts').trim();
+  cfg.supabaseTable=String(cfg.supabaseTable || 'tenant_signatures').trim();
+  return cfg;
+}
+function dataHasUsefulContractFields(data){
+  return Boolean(data && (data.tenantName || data.tenantPhone || data.propertyAddress || data.building || data.apartment || data.room || data.contractNumber));
+}
+async function loadDataFromUrl(){
+  const params=collectUrlParams();
+  const mode=params.get('mode') || '';
+  isPreviewMode = mode === 'preview';
+  document.body.classList.toggle('preview-mode', isPreviewMode);
+  const linkData=parseJsonParam(params, 'data') || parseJsonParam(params, 'd') || parseJsonParam(params, 'payload') || {};
+  const legacyCfg=parseJsonParam(params, 'cfg') || {};
+  const cfg={...legacyCfg, ...buildConfigFromParams(params, linkData)};
+  const pendingId=cfg.pendingSignatureId || linkData.pendingSignatureId || '';
+  const publicToken=cfg.publicToken || linkData.publicToken || '';
+
+  let data = dataHasUsefulContractFields(linkData) ? { ...linkData, ...cfg, pendingSignatureId: pendingId, publicToken } : null;
+  let fetchError='';
+
+  if(data){
+    normalizePropertyAddress(data);
+    await applyBaseData(data);
+    setMode('signer');
+    applyPreviewModeUi();
+    showStatus(isPreviewMode ? 'תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.' : 'פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+  }
+
+  if(mode !== 'sign' && !pendingId && !publicToken && !data){
+    showStatus('לא זוהה קישור חתימה. יש לפתוח קישור שנוצר מתוך מערכת השוכרים.', 'error');
+    showDebug('URL ללא מצב חתימה.\nSearch: '+location.search+'\nHash: '+location.hash);
+    return false;
+  }
+
+  if((pendingId || publicToken) && cfg.supabaseAnonKey && cfg.supabaseUrl && window.supabase?.createClient){
+    try{
+      const rowData=pendingId
+        ? await fetchPendingSignatureDataFromSupabase(pendingId, cfg)
+        : await fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg);
+      if(rowData && dataHasUsefulContractFields(rowData)){
+        data={...(data || {}), ...rowData, ...cfg, pendingSignatureId: rowData.pendingSignatureId || pendingId || cfg.pendingSignatureId || '', publicToken: rowData.publicToken || publicToken || cfg.publicToken || ''};
+        normalizePropertyAddress(data);
+        await applyBaseData(data);
+        setMode('signer');
+        applyPreviewModeUi();
+        if(rowData.isAlreadySigned){
+          renderAlreadySignedAudit(rowData);
+          showSignedCompletedNotice(rowData.pdfUrl || '', {alreadySigned:true, autoOpenPdf:Boolean(rowData.pdfUrl)});
+          return true;
+        }
+        showStatus(isPreviewMode ? 'תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.' : 'פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+        return true;
+      }
+    }catch(e){
+      fetchError=e?.message || String(e);
+      console.warn('טעינת הרשומה מ־Supabase נכשלה:', e);
+    }
+  }
+
+  if(data && dataHasUsefulContractFields(data)){
+    data={...data, ...cfg, pendingSignatureId: pendingId || data.pendingSignatureId || '', publicToken: publicToken || data.publicToken || ''};
+    normalizePropertyAddress(data);
+    await applyBaseData(data);
+    setMode('signer');
+    applyPreviewModeUi();
+    if(isPreviewMode){
+      showStatus('תצוגה מקדימה נטענה. לא נוצרה רשומה ולא ניתן לשלוח חתימה ממסך זה.', 'success');
+    } else if(fetchError){
+      showStatus('פרטי החוזה נטענו מנתוני הגיבוי שבקישור. אפשר לחתום ולשלוח.', 'success');
+      showDebug('טעינת Supabase נכשלה אך נתוני גיבוי נמצאו.\nID: '+pendingId+'\nשגיאה: '+fetchError);
+    }else{
+      showStatus('פרטי החוזה נטענו. יש להשלים את שדות החובה, לחתום וללחוץ על שלח.', 'success');
+    }
+    return true;
+  }
+
+  showStatus('לא הצלחתי לטעון את פרטי החוזה. יש ליצור קישור חתימה חדש מתוך המערכת הראשית.', 'error');
+  showDebug(
+    'אבחון טעינת דף חתימה\n'+
+    'Mode: '+mode+'\n'+
+    'Pending ID: '+pendingId+'\n'+
+    'Supabase URL: '+(cfg.supabaseUrl||'')+'\n'+
+    'Table: '+(cfg.supabaseTable||'')+'\n'+
+    'Has key: '+Boolean(cfg.supabaseAnonKey)+'\n'+
+    'Has fallback data: '+Boolean(dataHasUsefulContractFields(linkData))+'\n'+
+    'Fallback keys: '+Object.keys(linkData||{}).join(', ')+'\n'+
+    'Fetch error: '+fetchError+'\n'+
+    'Search length: '+(location.search||'').length+'\n'+
+    'Hash length: '+(location.hash||'').length+'\n'+
+    'URL sample: '+location.href.slice(0,1200)
+  );
+  setMode('signer');
+  return false;
+}
+function getSignerData(){
+  const base={...currentBaseData};
+  enforceCurrentContractNumber(base);
+  normalizePropertyAddress(base);
+  return {
+    ...base,
+    tenantName:val('tenantName'), tenantPhone:val('tenantPhone'), tenantId:val('tenantId'), homeAddress:val('homeAddress'), tenantEmail:val('tenantEmail'), paymentMethod:val('paymentMethod'), tenantNotes:val('tenantNotes'),
+    approvalText:'השוכר אישר שקרא והסכים לתנאי החוזה וחתם עליו באופן אלקטרוני.'
+  };
+}
+
+function isValidIsraeliId(value){
+  const digits=String(value || '').replace(/\D/g, '');
+  if(!/^\d{5,9}$/.test(digits)) return false;
+  const padded=digits.padStart(9, '0');
+  let sum=0;
+  for(let i=0;i<9;i++){
+    let n=Number(padded[i]) * ((i % 2) + 1);
+    if(n > 9) n -= 9;
+    sum += n;
+  }
+  return sum % 10 === 0;
+}
+function validateRequiredFields(show=true){
+  let missing=[]; requiredSignerFields.forEach(f=>{ const el=document.getElementById(f.id); if(!val(f.id)){missing.push(f.label); el.classList.add('field-error');} else el.classList.remove('field-error'); });
+  const email=val('tenantEmail'); if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){missing.push('דואר אלקטרוני תקין'); document.getElementById('tenantEmail').classList.add('field-error');}
+  const id=val('tenantId'); if(id && !isValidIsraeliId(id)){missing.push('מספר תעודת זהות ישראלית תקינה'); document.getElementById('tenantId').classList.add('field-error');}
+  const box=document.getElementById('missingFieldsBox');
+  if(show && missing.length){ box.innerHTML='<strong>לפני חתימה יש להשלים:</strong><br>'+missing.map(x=>'• '+x).join('<br>'); box.style.display='block'; }
+  else box.style.display='none';
+  return missing;
+}
+function getAgreementRoomName(d){
+  const rawRoom=String(d.room || d.roomDetails || '').trim();
+  if(isStudioContract(d)) return 'דירת סטודיו';
+  return rawRoom
+    .replace(/^חדר\s+/,'')
+    .replace(/^קומה\s+[^\s]+\s+/,'')
+    .trim() || 'החדר המפורט בדף זה';
+}
+function isStudioContract(d){
+  d = d || {};
+  const values=[d.apartment, d.room, d.roomDetails, d.propertyAddress].map(v=>String(v||'').trim());
+  return values.some(v=>v==='סטודיו' || v.includes('דירת סטודיו'));
+}
+function getPropertyContentsText(d){
+  if(isStudioContract(d)){
+    return 'דירת סטודיו הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ארון, מיטה ומזגן, להלן "התכולה".';
+  }
+  return 'דירת 4 חדרי שינה הכוללת: מטבח עם כיור כפול, מקרר, מכונת כביסה, תנור אפיה, כיריים, מיקרוגל, ספות, ארונות, מיטות ושידות בחדרים, וכן מזגן בכל חדר וגם בחלל הציבורי, להלן "התכולה".';
+}
+function getApartmentIntroText(d){
+  d = d || {};
+  let apartmentIntro = '';
+
+  if (d.apartmentIntro) {
+    apartmentIntro = d.apartmentIntro;
+  } else if (d.apartment_intro) {
+    apartmentIntro = d.apartment_intro;
+  } else if (d.apartmentIntroText) {
+    apartmentIntro = d.apartmentIntroText;
+  } else {
+    try {
+      apartmentIntro = new URLSearchParams(window.location.search || '').get('apartmentIntro') || '';
+    } catch(e) {
+      apartmentIntro = '';
+    }
+  }
+
+  apartmentIntro = String(apartmentIntro || '').trim();
+  if (apartmentIntro) {
+    return apartmentIntro;
+  }
+
+  if(isStudioContract(d)){
+    return 'הדירה היא דירת סטודיו המושכרת לשוכר אחד.';
+  }
+
+  const roomName=getAgreementRoomName(d);
+  return `הדירה היא דירת 5 חדרים, המושכרת למספר שוכרים שונים בחדרים נפרדים זה מזה, הגרים באותה דירה ובעלי זכויות שימוש שוות בחלקים המשותפים בדירה, למעט חדרי השינה. השוכר יתגורר בחדר: ${roomName}, הוא ולא אחר.`;
+}
+function formatAmountForContract(value){
+  const raw=String(value ?? '').trim();
+  if(!raw) return '___';
+  return raw.replace(/\s*₪\s*/g,'').trim();
+}
+function extraTermsForContract(d){
+  const text=String(d?.extraTerms || '').trim();
+  return text || 'אין הערות נוספות.';
+}
+function getRentalMonthsForContract(d){
+  const fromDates = calculateRentalMonths(d?.startDate, d?.endDate);
+  const explicit = String(d?.rentalMonths || d?.contractMonths || '').trim();
+  return fromDates || explicit || '___';
+}
+function buildContractText(d){
+  const propertyContents=getPropertyContentsText(d);
+  const apartmentIntro=getApartmentIntroText(d);
+  const rentalMonths=getRentalMonthsForContract(d);
+  const rentAmount=formatAmountForContract(d.rentAmount);
+  const depositAmount=formatAmountForContract(d.depositAmount);
+  const municipalTaxAmount=formatAmountForContract(d.municipalTaxAmount || d.arnonaAmount || '0');
+  const extraTerms=extraTermsForContract(d);
+  return `בנוגע לדירה שפרטיה מופיעים בדף זה, ${propertyContents}
+
+הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.
+
+אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:
+
+1. מבוא
+
+המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.
+
+${apartmentIntro}
+
+2. תקופת השכירות
+
+2.1 תקופת השכירות המוסכמת הינה ל-${rentalMonths} חודשים, החל מיום ${formatDate(d.startDate)} עד תאריך ${formatDate(d.endDate)}, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.
+
+2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.
+
+3. אי תכולת חוק הגנת הדיור
+
+3.1 הצדדים מסכימים בזה כי השכירות האמורה לא תהיה מוגנת עפ"י חוק הגנת הדייר נוסח משולב (התשל"ב 1972), להלן "חוק הגנת הדייר".
+
+3.2 המשכיר מצהיר שהחדר פנוי מכל אדם.
+
+4. הצהרות השוכר
+
+4.1 השוכר מצהיר כי לא שילם כל דמי מפתח ולא נתן תמורה אחרת מכל סוג תמורת הדירה, והוא מודע כי השכירות הזו לא תהיה מוגנת עפ"י חוק הגנת הדייר.
+
+4.2 מטרת השכירות היא שימוש לצורכי מגורים בלבד, ללא הכנסת חיות מחמד ולא לכל מטרה אחרת.
+
+4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.
+
+4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.
+
+4.5 השוכר מכיר בזכות המשכיר לבקר בדירה בכל זמן מתקבל על הדעת בכדי לבדוק את מצבה ואת דרך השימוש בה ו/או ביצוע תיקונים בדירה ו/או הצגתה למשכיר/קונה אחר ע"י הודעה מראש לשוכר בלבד.
+
+4.6 השוכר מסכים כי המשכיר יוכל להעביר את זכויותיו בדירה לאחר או לאחרים כרצונו ומבלי לקבל את הסכמת השוכר, ובלבד שמקבל או מקבלי הזכות יכבדו את זכויותיו של המשכיר ע"פ הסכם זה.
+
+4.7 השוכר מתחייב לפנות את הדירה ולהחזירה למשכיר בתום תקופת הסכם זה, כשהדירה במצב טוב ותקין כפי שהושכרה למעט בלאי רגיל וטבעי, כשהדירה ריקה מכל אדם ו/או חפץ שלא שייך לבעלים.
+
+4.8 השוכר מתחייב לשמור על השקט ולא להפריע לשכנים ולא לערוך מסיבות רועשות בדירה.
+
+5. הצהרת המשכיר
+
+הבעלים מצהיר בכך כי הדירה המושכרת רשומה במנהל מקרקעי ישראל על שמו ואין שום מניעה משפטית להשכירה לאחרים. כמו כן מצהיר הבעלים כי לא מתנהלים הליכים משפטיים בעניין הדירה המושכרת לרבות תביעות פינוי.
+
+6. דמי השכירות ואופציית הארכה
+
+6.1 השוכר מתחייב להעביר למשכיר כתמורה להשכרת החדר והשימוש בדירה בכלל דמי שכירות חודשיים השווים ל-${rentAmount} ₪ חודש בחודשו.
+
+6.3 דמי השכירות ישולמו ע"י השוכר למשכיר עבור ${rentalMonths} חודשים מראש ב-${rentalMonths} שיקים אשר ישולמו במעמד חתימת ההסכם והסכם זה מהווה קבלה בגינם.
+
+6.4 למען הסר ספק, דמי השכירות ישולמו בין אם השוכר משתמש בנכס ובין אם לאו.
+
+6.5 ככל שהצדדים ירצו להאריך את תקופת השכירות בשנה נוספת, יהא עליהם לבצע זאת עד ולכל המאוחר 3 חודשים מסיום החוזה בכתב. לא ממשו הצדדים רצונם להאריך את החוזה בכתב, יסתיים החוזה בין הצדדים במועד האמור דלעיל.
+
+7. מיסים והוצאות
+
+7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של ${municipalTaxAmount} ₪ לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.
+
+7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.
+
+7.3 קנסות שיוטלו ו/או תשלומים הנוגעים לשוכר שישלם המשכיר מחשבונו, המשכיר יכול לחזור ולדרוש החזר צמוד למדד יוקר המחיה בתוספת מדד וריבית כחוק.
+
+7.4 באחריות המשכיר לתקן את הנכס בתור בעלים, בסמוך להודעת הדייר על בעיה ובאופן מהיר במקרים בהם התקלה מהווה הפרעה משמעותית לשגרת החיים בדירה ולשלם את כל תשלומי חובה ו/או היטלים ו/או מיסים הנוגעים לבעלי נכס אשר יוטלו על הדירה.
+
+8. אחריות השוכר
+
+8.1 השוכר מתחייב לשמור על הנכס כשהוא במצבו ההתחלתי למעט בלאי רגיל וסביר.
+
+8.2 השוכר מתחייב לתקן כל נזק ו/או פגם שנגרם על ידו או עקב שימושו בדירה על חשבונו ולשביעות רצונו של בעלי הנכס.
+
+8.3 השוכר מתחייב לא לעשות כל שינוי בדירה מבלי לקבל רשות בכתב ומראש מאת המשכיר.
+
+8.4 לשמור על ניקיון הדירה ולנקותה אחת לשבוע ולהשתמש בדירה באופן שלא יגרום מטרד לציבור ולשוכרים האחרים אשר עמו בדירה.
+
+8.5 השוכר מתחייב שלא לבצע קידוחים ו/או ניסורים בשיש, ו/או בקרמיקות ו/או בארונות הקיימים אלא באישור מאת המשכיר.
+
+9. בטחונות
+
+מבלי לפגוע בהתחייבויות הדדיות שיקבלו הצדדים על עצמם במסגרת הסכם זה ובזכותם לסעדים ע"פ כל דין, מתחייב השוכר להפקיד בידי המשכיר שיק על סך ${depositAmount} ₪.
+
+9.1 במידה והשוכר יעמוד בכל התחייבויותיו האמורות, אזי מתחייב המשכיר להשיב את הביטחונות כפי שהם מבלי לממשם, יום לאחר סיום תקופת החוזה.
+
+9.2 למשכיר תעמוד הזכות לממש את הביטחונות כולן ו/או חלקן בגין הפרה בוטה של הסכם זה. לעניין זה, הפרה בוטה תחול על סעיפים 2, 4-9.
+
+10. פינוי הנכס
+
+10.1 במידה והשוכר יפר הסכם זה בכך שלא ישלם בגין השכירות יהיה המשכיר רשאי לבטל הסכם זה ולפנות את הנכס באמצעותו או באמצעות אחר וזאת על פי הודעה מראש כאמור בסעיף 10 וזאת מבלי לפגוע בזכויותיו לתבוע על פי דין.
+
+10.2 השוכרים מתחייבים להחזיר את המושכר במצב נקי ותקין וכפי שקבלו את המושכר לידיהם.
+
+10.3 השוכר מתחייב לפנות את הדירה ביום שנקבע מבלי לקבל התראה מראש. במידה ולא ייעשה כן ישלם פיצוי בסך של 100 ₪ ליום מבלי לפגוע בזכויות המשכיר מלתבוע על פי כל דין או לפנותו בכוח חוקי.
+
+11. הודעות
+
+הודעה שתישלח בדואר רשום על פי כתובת הצדדים המוצגת במבוא להסכם זה תחשב כאילו הגיעה לצד המשולח בתוך 6 ימים מעת שליחתה בדואר רשום כאילו נמסרה ביד.
+
+הערות
+${extraTerms}
+
+ולראיה באו הצדדים על החתום`;
+}
+function buildContractHtml(d){
+  d = d || {};
+  const propertyContents=escapeHtml(getPropertyContentsText(d));
+  const apartmentIntro=escapeHtml(getApartmentIntroText(d));
+  const rentalMonthsRaw=getRentalMonthsForContract(d);
+  const rentalMonths=escapeHtml(rentalMonthsRaw);
+  const start=escapeHtml(formatDate(d.startDate));
+  const end=escapeHtml(formatDate(d.endDate));
+  const rentAmount=escapeHtml(formatAmountForContract(d.rentAmount));
+  const depositAmount=escapeHtml(formatAmountForContract(d.depositAmount));
+  const municipalTaxAmount=escapeHtml(formatAmountForContract(d.municipalTaxAmount || d.arnonaAmount || '0'));
+  const extraTerms=escapeHtml(extraTermsForContract(d)).replace(/\n/g,'<br>');
+  return `
+    <p>בנוגע לדירה שפרטיה מופיעים בדף זה, ${propertyContents}</p>
+    <p>הואיל והמשכיר הוא המחזיק וברצונו להשכיר לשוכר את הדירה האמורה, בכפוף לתנאי הסכם זה.</p>
+    <p><strong>אי לכך ובהתאם לזאת הוסכם, הותנה והוצהר בין הצדדים כדלקמן:</strong></p>
+    <p><strong>1. מבוא</strong></p>
+    <p class="standalone-clause">המבוא להסכם זה, מהווים מקשה אחת שאינה ניתנת להפרדה.</p>
+    <p class="standalone-clause">${apartmentIntro}</p>
+
+    <p><strong>2. תקופת השכירות</strong></p>
+    <p class="sub-clause">2.1 תקופת השכירות המוסכמת הינה ל-<span class="highlight-value">${rentalMonths}</span> חודשים, החל מיום <span class="highlight-value">${start}</span> עד תאריך <span class="highlight-value">${end}</span>, בשכירות חודשית בלתי מוגנת וללא תשלום דמי מפתח.</p>
+    <p class="sub-clause">2.2 השוכר לא יהיה זכאי לקצר את תקופת השכירות. במידה ויבקש לקצר, הוא יחויב בתשלום כל תקופת השכירות זולת אם ידאג לשוכר אחר תחתיו באותם תנאים עד סוף התקופה.</p>
+
+    <p><strong>3. אי תכולת חוק הגנת הדיור</strong></p>
+    <p class="sub-clause">3.1 הצדדים מסכימים בזה כי השכירות האמורה לא תהיה מוגנת עפ"י חוק הגנת הדייר נוסח משולב (התשל"ב 1972), להלן "חוק הגנת הדייר".</p>
+    <p class="sub-clause">3.2 המשכיר מצהיר שהחדר פנוי מכל אדם.</p>
+
+    <p><strong>4. הצהרות השוכר</strong></p>
+    <p class="sub-clause">4.1 השוכר מצהיר כי לא שילם כל דמי מפתח ולא נתן תמורה אחרת מכל סוג תמורת הדירה, והוא מודע כי השכירות הזו לא תהיה מוגנת עפ"י חוק הגנת הדייר.</p>
+    <p class="sub-clause">4.2 מטרת השכירות היא שימוש לצורכי מגורים בלבד, ללא הכנסת חיות מחמד ולא לכל מטרה אחרת.</p>
+    <p class="sub-clause">4.3 השוכר מתחייב שלא להעביר את הדירה או חלק ממנה או להשכיר את הדירה או חלק ממנה לאדם אחר, בתמורה או שלא בתמורה.</p>
+    <p class="sub-clause">4.4 השוכר מצהיר כי הוא מקבל את הדירה במצבה בעת מסירת הדירה לאחר בחינה מדוקדקת והוא מוותר בזה על כל טענה מכל סוג ומין שהוא, ביחס לטיב הדירה או למקום בו היא ממוקמת.</p>
+    <p class="sub-clause">4.5 השוכר מכיר בזכות המשכיר לבקר בדירה בכל זמן מתקבל על הדעת בכדי לבדוק את מצבה ואת דרך השימוש בה ו/או ביצוע תיקונים בדירה ו/או הצגתה למשכיר/קונה אחר ע"י הודעה מראש לשוכר בלבד.</p>
+    <p class="sub-clause">4.6 השוכר מסכים כי המשכיר יוכל להעביר את זכויותיו בדירה לאחר או לאחרים כרצונו ומבלי לקבל את הסכמת השוכר, ובלבד שמקבל או מקבלי הזכות יכבדו את זכויותיו של המשכיר ע"פ הסכם זה.</p>
+    <p class="sub-clause">4.7 השוכר מתחייב לפנות את הדירה ולהחזירה למשכיר בתום תקופת הסכם זה, כשהדירה במצב טוב ותקין כפי שהושכרה למעט בלאי רגיל וטבעי, כשהדירה ריקה מכל אדם ו/או חפץ שלא שייך לבעלים.</p>
+    <p class="sub-clause">4.8 השוכר מתחייב לשמור על השקט ולא להפריע לשכנים ולא לערוך מסיבות רועשות בדירה.</p>
+
+    <p><strong>5. הצהרת המשכיר</strong></p>
+    <p class="standalone-clause">הבעלים מצהיר בכך כי הדירה המושכרת רשומה במנהל מקרקעי ישראל על שמו ואין שום מניעה משפטית להשכירה לאחרים. כמו כן מצהיר הבעלים כי לא מתנהלים הליכים משפטיים בעניין הדירה המושכרת לרבות תביעות פינוי.</p>
+
+    <p><strong>6. דמי השכירות ואופציית הארכה</strong></p>
+    <p class="sub-clause">6.1 השוכר מתחייב להעביר למשכיר כתמורה להשכרת החדר והשימוש בדירה בכלל דמי שכירות חודשיים השווים ל-<span class="highlight-value">${rentAmount} ₪</span> חודש בחודשו.</p>
+    <p class="sub-clause">6.3 דמי השכירות ישולמו ע"י השוכר למשכיר עבור <span class="highlight-value">${rentalMonths}</span> חודשים מראש ב-<span class="highlight-value">${rentalMonths}</span> שיקים אשר ישולמו במעמד חתימת ההסכם והסכם זה מהווה קבלה בגינם.</p>
+    <p class="sub-clause">6.4 למען הסר ספק, דמי השכירות ישולמו בין אם השוכר משתמש בנכס ובין אם לאו.</p>
+    <p class="sub-clause">6.5 ככל שהצדדים ירצו להאריך את תקופת השכירות בשנה נוספת, יהא עליהם לבצע זאת עד ולכל המאוחר 3 חודשים מסיום החוזה בכתב. לא ממשו הצדדים רצונם להאריך את החוזה בכתב, יסתיים החוזה בין הצדדים במועד האמור דלעיל.</p>
+
+    <p><strong>7. מיסים והוצאות</strong></p>
+    <p class="sub-clause">7.1 השוכר יישא בכל התשלומים וההוצאות הכרוכות בדירה, לרבות ארנונה, והיטל שמירה בסכום של <span class="highlight-value">${municipalTaxAmount} ₪</span> לאדם לחודש, כאשר מוסכם בזאת כי השוכר ישלם למשכיר ו/או לרשויות השונות את המיסים כאמור לעיל בסמוך לדרישת התשלום. כמו כן השוכר ביחד עם השוכרים הנוספים בדירה ישלמו למשכיר ע"פ דרישת חברת החשמל וחברת המים הוצאות בגין חשבון חשמל ומים בהתאמה לשימוש כאשר כלל השוכרים בדירה יתחלקו בהוצאות אלו באופן שווה.</p>
+    <p class="sub-clause">7.2 השוכר ימציא למשכיר אישורים בגין כל התשלומים וההוצאות כמפורט בסעיף 6.1 על פי דרישה ו/או בעת התשלום בגין השכירות.</p>
+    <p class="sub-clause">7.3 קנסות שיוטלו ו/או תשלומים הנוגעים לשוכר שישלם המשכיר מחשבונו, המשכיר יכול לחזור ולדרוש החזר צמוד למדד יוקר המחיה בתוספת מדד וריבית כחוק.</p>
+    <p class="sub-clause">7.4 באחריות המשכיר לתקן את הנכס בתור בעלים, בסמוך להודעת הדייר על בעיה ובאופן מהיר במקרים בהם התקלה מהווה הפרעה משמעותית לשגרת החיים בדירה ולשלם את כל תשלומי חובה ו/או היטלים ו/או מיסים הנוגעים לבעלי נכס אשר יוטלו על הדירה.</p>
+
+    <p><strong>8. אחריות השוכר</strong></p>
+    <p class="sub-clause">8.1 השוכר מתחייב לשמור על הנכס כשהוא במצבו ההתחלתי למעט בלאי רגיל וסביר.</p>
+    <p class="sub-clause">8.2 השוכר מתחייב לתקן כל נזק ו/או פגם שנגרם על ידו או עקב שימושו בדירה על חשבונו ולשביעות רצונו של בעלי הנכס.</p>
+    <p class="sub-clause">8.3 השוכר מתחייב לא לעשות כל שינוי בדירה מבלי לקבל רשות בכתב ומראש מאת המשכיר.</p>
+    <p class="sub-clause">8.4 לשמור על ניקיון הדירה ולנקותה אחת לשבוע ולהשתמש בדירה באופן שלא יגרום מטרד לציבור ולשוכרים האחרים אשר עמו בדירה.</p>
+    <p class="sub-clause">8.5 השוכר מתחייב שלא לבצע קידוחים ו/או ניסורים בשיש, ו/או בקרמיקות ו/או בארונות הקיימים אלא באישור מאת המשכיר.</p>
+
+    <p><strong>9. בטחונות</strong></p>
+    <p class="standalone-clause">מבלי לפגוע בהתחייבויות הדדיות שיקבלו הצדדים על עצמם במסגרת הסכם זה ובזכותם לסעדים ע"פ כל דין, מתחייב השוכר להפקיד בידי המשכיר שיק על סך <span class="highlight-value">${depositAmount} ₪</span>.</p>
+    <p class="sub-clause">9.1 במידה והשוכר יעמוד בכל התחייבויותיו האמורות, אזי מתחייב המשכיר להשיב את הביטחונות כפי שהם מבלי לממשם, יום לאחר סיום תקופת החוזה.</p>
+    <p class="sub-clause">9.2 למשכיר תעמוד הזכות לממש את הביטחונות כולן ו/או חלקן בגין הפרה בוטה של הסכם זה. לעניין זה, הפרה בוטה תחול על סעיפים 2, 4-9.</p>
+
+    <p><strong>10. פינוי הנכס</strong></p>
+    <p class="sub-clause">10.1 במידה והשוכר יפר הסכם זה בכך שלא ישלם בגין השכירות יהיה המשכיר רשאי לבטל הסכם זה ולפנות את הנכס באמצעותו או באמצעות אחר וזאת על פי הודעה מראש כאמור בסעיף 10 וזאת מבלי לפגוע בזכויותיו לתבוע על פי דין.</p>
+    <p class="sub-clause">10.2 השוכרים מתחייבים להחזיר את המושכר במצב נקי ותקין וכפי שקבלו את המושכר לידיהם.</p>
+    <p class="sub-clause">10.3 השוכר מתחייב לפנות את הדירה ביום שנקבע מבלי לקבל התראה מראש. במידה ולא ייעשה כן ישלם פיצוי בסך של 100 ₪ ליום מבלי לפגוע בזכויות המשכיר מלתבוע על פי כל דין או לפנותו בכוח חוקי.</p>
+
+    <p><strong>11. הודעות</strong></p>
+    <p class="standalone-clause">הודעה שתישלח בדואר רשום על פי כתובת הצדדים המוצגת במבוא להסכם זה תחשב כאילו הגיעה לצד המשולח בתוך 6 ימים מעת שליחתה בדואר רשום כאילו נמסרה ביד.</p>
+
+    <p><strong>הערות</strong></p>
+    <p class="standalone-clause">${extraTerms}</p>
+
+    <p><strong>ולראיה באו הצדדים על החתום</strong></p>`;
+}
+function setContractTextHtml(d){
+  const el=document.getElementById('contractText');
+  if(!el) return;
+  try{
+    const html=buildContractHtml(d || {});
+    el.innerHTML = html && html.trim() ? html : '<p class="standalone-clause">שגיאה: מלל ההסכם לא נבנה. יש לרענן את הדף ולנסות שוב.</p>';
+  }catch(err){
+    console.error('שגיאה בבניית מלל עיקרי ההסכם:', err);
+    el.innerHTML='<p class="standalone-clause">שגיאה בהצגת עיקרי ההסכם. נא ליצור קישור חתימה חדש או לפנות למנהל המערכת.</p>';
+    showDebug('שגיאה בבניית עיקרי ההסכם:\n'+(err && err.stack ? err.stack : err));
+  }
+}
+
+function refreshContract(){
+  const d=getSignerData();
+  document.getElementById('contractDate').innerText=`תאריך: ${new Date().toLocaleDateString('he-IL')}`;
+  const statusText = lastSignatureData ? 'נחתם' : (d.signatureStatus || 'ממתין לחתימה');
+  const vc=document.getElementById('viewContractNumber'); if(vc) vc.innerText=d.contractNumber||'';
+  const topCn=document.getElementById('topContractNumber'); if(topCn) topCn.innerText=d.contractNumber||'';
+  const vs=document.getElementById('viewSignatureStatus'); if(vs) vs.innerText=statusText;
+  const vlf=document.getElementById('viewLandlordFullName'); if(vlf) vlf.innerText=d.landlordFullName||'';
+  const vli=document.getElementById('viewLandlordId'); if(vli) vli.innerText=d.landlordId||'';
+  const vlp=document.getElementById('viewLandlordPhone'); if(vlp) vlp.innerText=d.landlordPhone||'';
+  const vla=document.getElementById('viewLandlordAddress'); if(vla) vla.innerText=d.landlordAddress||'';
+  document.getElementById('viewTenantName').innerText=d.tenantName||''; document.getElementById('viewTenantPhone').innerText=d.tenantPhone||''; document.getElementById('viewTenantId').innerText=d.tenantId||'טרם מולא';
+  document.getElementById('viewHomeAddress').innerText=d.homeAddress||'טרם מולא'; document.getElementById('viewTenantEmail').innerText=d.tenantEmail||'טרם מולא';
+  const propertyBaseEl=document.getElementById('viewPropertyBaseAddress'); if(propertyBaseEl) propertyBaseEl.innerText=d.propertyBaseAddress||'';
+  const roomDetailsEl=document.getElementById('viewRoomDetails'); if(roomDetailsEl) roomDetailsEl.innerText=d.roomDetails||'';
+  const periodEl=document.getElementById('viewContractPeriod'); if(periodEl) periodEl.innerText=`תקופת החוזה: ${formatDate(d.startDate)} עד ${formatDate(d.endDate)}`;
+  setContractTextHtml(d);
+  validateRequiredFields(false);
+}
+function fillSignerDemoData(){ setVal('tenantId',''); setVal('homeAddress','משה רבינו 10 תל-אביב'); setVal('tenantEmail',''); setVal('paymentMethod',''); setVal('tenantNotes',''); refreshContract(); showStatus('נתוני בדיקה מולאו. יש למלא תעודת זהות תקינה לפני שליחה.','success'); }
+function showStatus(msg,type=''){ showBox('statusBox',msg,type); }
+
+function getCurrentContractNumber(){
+  return sanitizeContractNumber(currentBaseData?.contractNumber) || sanitizeContractNumber(lastSignatureData?.contractNumber) || '';
+}
+function getCurrentSignatureIdentity(){
+  return String(currentBaseData?.pendingSignatureId || getCurrentContractNumber() || 'unknown').trim();
+}
+function getSignatureStorageKey(){
+  return 'tenantSignatureSigned_' + getCurrentSignatureIdentity();
+}
+function clearLegacySignatureIfDifferent(){
+  try{
+    const saved=localStorage.getItem('tenantSignatureDemoV17');
+    if(!saved) return;
+    const parsed=JSON.parse(saved);
+    const savedContract=sanitizeContractNumber(parsed?.contractNumber);
+    const currentContract=getCurrentContractNumber();
+    const savedPending=String(parsed?.pendingSignatureId || '').trim();
+    const currentPending=String(currentBaseData?.pendingSignatureId || '').trim();
+    if((currentPending && savedPending && currentPending!==savedPending) || (currentContract && savedContract && currentContract!==savedContract)){
+      localStorage.removeItem('tenantSignatureDemoV17');
+    }
+  }catch(e){ localStorage.removeItem('tenantSignatureDemoV17'); }
+}
+function setSignerFormDisabled(disabled){
+  ['tenantId','homeAddress','tenantEmail','approveTerms'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=Boolean(disabled);
+  });
+  const canvas=document.getElementById('signatureCanvas');
+  if(canvas) canvas.style.pointerEvents=disabled ? 'none' : '';
+}
+function buildPdfDownloadButton(pdfUrl, label='הורד / פתח חוזה חתום'){
+  if(!pdfUrl) return '';
+  return `<a class="linkbtn btn-green" href="${escapeHtml(pdfUrl)}" target="_blank" download>📄 ${escapeHtml(label)}</a>`;
+}
+function showSignedCompletedNotice(pdfUrl, options={}){
+  document.body.classList.add('signed-completed');
+  setSignerFormDisabled(true);
+  const signArea=document.querySelector('.sign-area');
+  if(signArea) signArea.style.display='none';
+  const uploadBox=document.getElementById('uploadResultBox');
+  const details=document.getElementById('uploadResultDetails');
+  if(details){
+    const contractNumber=getCurrentContractNumber() || currentBaseData?.contractNumber || '';
+    const message=options.alreadySigned
+      ? 'החוזה הזה כבר נחתם בעבר. אין צורך לחתום שוב.'
+      : 'החוזה נחתם ונשמר בהצלחה במערכת.';
+    details.innerHTML=`<div class="signed-completed-notice">
+      <div>${escapeHtml(message)}</div>
+      <div><strong>מספר חוזה:</strong> ${escapeHtml(contractNumber)}</div>
+      ${pdfUrl ? '<div class="small-note">אם ההורדה לא נפתחת אוטומטית, לחץ/י על הכפתור:</div>'+buildPdfDownloadButton(pdfUrl) : '<div class="small-note">לא נמצא קישור PDF חתום ברשומה. החוזה מוצג לקריאה בלבד.</div>'}
+    </div>`;
+  }
+  if(uploadBox) uploadBox.style.display='block';
+  const topText=document.querySelector('.topbar p');
+  if(topText) topText.textContent=pdfUrl ? 'החוזה כבר חתום. ניתן לפתוח או להוריד את ה־PDF החתום.' : 'החוזה כבר חתום ומוצג לקריאה בלבד.';
+  if(pdfUrl && options.autoOpenPdf){
+    showStatus('החוזה כבר נחתם. בעוד רגע נפתח את החוזה החתום להורדה/צפייה.', 'success');
+    setTimeout(()=>{
+      try{ window.location.href=pdfUrl; }catch(e){ console.warn('פתיחת PDF אוטומטית נכשלה', e); }
+    }, 1800);
+  }
+}
+function tryClosePageAfterSuccess(pdfUrl){
+  showSignedCompletedNotice(pdfUrl, {alreadySigned:false});
+  showStatus('החוזה נשלח בהצלחה ונשמר במערכת. הדף ינסה להיסגר אוטומטית. אם הוא נשאר פתוח, אפשר לסגור אותו ידנית או להוריד את החוזה החתום.', 'success');
+  setTimeout(()=>{
+    try{ window.open('', '_self'); window.close(); }catch(e){ console.warn('סגירה אוטומטית נחסמה על ידי הדפדפן', e); }
+  }, 3500);
+}
+function renderAlreadySignedAudit(rowData){
+  const raw=(rowData?.rawData && typeof rowData.rawData==='object') ? rowData.rawData : {};
+  const contractNumber=sanitizeContractNumber(rowData?.contractNumber) || sanitizeContractNumber(raw.contractNumber) || getCurrentContractNumber();
+  lastSignatureData={
+    ...raw,
+    contractNumber,
+    signatureStatus:rowData?.signatureStatus || raw.signatureStatus || 'נחתם',
+    personStatus:rowData?.personStatus || raw.personStatus || 'שוכר פעיל',
+    tenantName:rowData?.tenantName || raw.tenantName || currentBaseData?.tenantName || '',
+    tenantPhone:rowData?.tenantPhone || raw.tenantPhone || currentBaseData?.tenantPhone || '',
+    tenantId:rowData?.tenantId || raw.tenantId || '',
+    tenantEmail:rowData?.tenantEmail || raw.tenantEmail || '',
+    signedAt:raw.signedAt || formatDateTime(rowData?.signedAt) || '',
+    signedAtIso:rowData?.signedAt || raw.signedAtIso || '',
+    documentHash:rowData?.documentHash || raw.documentHash || '',
+    userAgent:rowData?.signerUserAgent || raw.userAgent || ''
+  };
+  currentBaseData.contractNumber=contractNumber;
+  renderAudit();
+}
+
+function applyPreviewModeUi(){
+  if(!isPreviewMode) return;
+  document.body.classList.add('preview-mode');
+  const title=document.querySelector('.topbar h1');
+  const contractNumber=sanitizeContractNumber(currentBaseData.contractNumber) || currentBaseData.contractNumber || '000000';
+  if(title) title.innerHTML='תצוגה מקדימה - חוזה מספר <span id="topContractNumber">'+escapeHtml(contractNumber)+'</span>';
+  const p=document.querySelector('.topbar p');
+  if(p) p.textContent='תצוגה מקדימה בלבד. החוזה לא נשלח לשוכר, לא נשמר ב־Supabase ולא נוצר PDF חתום.';
+  const sectionTitles=[...document.querySelectorAll('.section-title')];
+  sectionTitles.forEach(el=>{ if(el.textContent.trim()==='חתימת השוכר') el.style.display='none'; });
+}
+
+function showDebug(message){
+  let box=document.getElementById('debugBox');
+  if(!box){
+    box=document.createElement('div');
+    box.id='debugBox';
+    box.className='audit';
+    box.style.display='none';
+    const status=document.getElementById('statusBox');
+    if(status && status.parentNode) status.parentNode.insertBefore(box, status.nextSibling);
+  }
+  box.style.display='block';
+  box.innerHTML='<h3>פרטי אבחון טעינת חוזה</h3><div style="white-space:pre-wrap; direction:ltr; text-align:left; font-size:12px;">'+escapeHtml(message)+'</div>';
+}
+function resizeCanvas(){ const canvas=document.getElementById('signatureCanvas'); if(!canvas) return; const ratio=Math.max(window.devicePixelRatio||1,1); const width=canvas.offsetWidth, height=canvas.offsetHeight; canvas.width=width*ratio; canvas.height=height*ratio; canvas.getContext('2d').scale(ratio,ratio); if(signaturePad) signaturePad.clear(); }
+function initSignaturePad(){ const canvas=document.getElementById('signatureCanvas'); if(!canvas) return; signaturePad=new SignaturePad(canvas,{minWidth:.8,maxWidth:2.8,backgroundColor:'rgb(255,255,255)'}); resizeCanvas(); }
+function clearSignature(){ if(signaturePad) signaturePad.clear(); showStatus('החתימה נוקתה.',''); }
+async function sha256(text){ const data=new TextEncoder().encode(text); const hash=await crypto.subtle.digest('SHA-256',data); return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function signContract(){
+  refreshContract();
+  const contractNumber=sanitizeContractNumber(currentBaseData.contractNumber);
+  if(!contractNumber){showStatus('מספר החוזה חסר או לא תקין. חזור לצד המנהל, צור קישור חתימה חדש עם מספר חוזה רץ, ופתח את הקישור החדש.','error'); return;}
+  currentBaseData.contractNumber=contractNumber;
+  const missing=validateRequiredFields(true); if(missing.length){showStatus('יש להשלים את כל שדות החובה לפני החתימה.','error'); return;}
+  if(!document.getElementById('approveTerms').checked){showStatus('חובה לאשר שקראת והסכמת לתנאי החוזה לפני החתימה.','error'); return;}
+  if(!signaturePad || signaturePad.isEmpty()){showStatus('נא לחתום באזור החתימה לפני השמירה.','error'); return;}
+  const payload=getSignerData();
+  const documentHash=await sha256(JSON.stringify(payload));
+  lastSignatureData={...payload, signatureStatus:'נחתם',
+    personStatus:'שוכר פעיל', signedAt:new Date().toLocaleString('he-IL'), signedAtIso:new Date().toISOString(), documentHash, userAgent:navigator.userAgent, signatureImage:signaturePad.toDataURL('image/png')};
+  localStorage.setItem(getSignatureStorageKey(),JSON.stringify(lastSignatureData));
+  localStorage.setItem('tenantSignatureDemoV17',JSON.stringify(lastSignatureData));
+  renderAudit(); showStatus('החתימה נשמרה בהצלחה בדפדפן. עכשיו אפשר ליצור PDF חתום.','success');
+}
+function renderAudit(){
+  if(!lastSignatureData) return;
+  const currentContract=getCurrentContractNumber();
+  if(currentContract){ lastSignatureData.contractNumber=currentContract; }
+  const box=document.getElementById('auditBox'), det=document.getElementById('auditDetails');
+  det.innerHTML=`<strong>מספר חוזה:</strong> ${escapeHtml(lastSignatureData.contractNumber||'')}<br><strong>סטטוס חתימה:</strong> ${escapeHtml(lastSignatureData.signatureStatus||'נחתם')}<br><strong>שם:</strong> ${escapeHtml(lastSignatureData.tenantName)}<br><strong>טלפון:</strong> ${escapeHtml(lastSignatureData.tenantPhone)}<br><strong>תעודת זהות:</strong> ${escapeHtml(lastSignatureData.tenantId)}<br><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(lastSignatureData.signedAt)}<br><strong>מזהה מסמך SHA-256:</strong><br><span class="ltr" style="display:inline-block;">${escapeHtml(lastSignatureData.documentHash)}</span><br><strong>דפדפן:</strong><br><span class="ltr" style="display:inline-block;">${escapeHtml(lastSignatureData.userAgent)}</span>`;
+  box.style.display='block';
+}
+
+function buildPdfMetaPageHtml(d){
+  return `<div class="pdf-title"><img class="pdf-logo" src="tenant-signature-logo.png" alt="לוגו" /><h1>חוזה מספר ${escapeHtml(d.contractNumber||'')}</h1><div>תאריך: ${escapeHtml(new Date().toLocaleDateString('he-IL'))}</div></div>
+  <div class="pdf-section-title">פרטי המשכיר</div><table class="pdf-table"><tr><th>שם מלא</th><th>תעודת זהות</th><th>טלפון נייד</th></tr><tr><td>${escapeHtml(d.landlordFullName||'')}</td><td>${escapeHtml(d.landlordId||'')}</td><td>${escapeHtml(d.landlordPhone||'')}</td></tr></table>
+  <table class="pdf-table"><tr><th>כתובת המשכיר</th></tr><tr><td>${escapeHtml(d.landlordAddress||'')}</td></tr></table>
+  <div class="pdf-section-title">פרטי השוכר</div><table class="pdf-table"><tr><th>שם השוכר</th><th>טלפון</th><th>תעודת זהות</th></tr><tr><td>${escapeHtml(d.tenantName)}</td><td>${escapeHtml(d.tenantPhone)}</td><td>${escapeHtml(d.tenantId)}</td></tr></table>
+  <table class="pdf-table"><tr><th>כתובת מגורים</th><th>דואר אלקטרוני</th></tr><tr><td>${escapeHtml(d.homeAddress)}</td><td>${escapeHtml(d.tenantEmail)}</td></tr></table>
+  <div class="pdf-section-title">פרטי הנכס</div><table class="pdf-table"><tr><th>כתובת הנכס</th><th>פרטי החדר</th></tr><tr><td>${escapeHtml(d.propertyBaseAddress || '')}</td><td>${escapeHtml(d.roomDetails || '')}</td></tr></table>
+  <div style="font-size:18px;font-weight:bold;color:#0a355c;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;text-align:center;margin:8px 0 12px;">תקופת החוזה: ${escapeHtml(formatDate(d.startDate))} עד ${escapeHtml(formatDate(d.endDate))}</div>
+  <table class="pdf-table"><tr><th>שכירות חודשית</th><th>פיקדון</th></tr><tr><td>${escapeHtml(d.rentAmount)} ₪</td><td>${escapeHtml(d.depositAmount)} ₪</td></tr></table>`;
+}
+function buildPdfSignatureHtml(d){
+  return `<div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
+  <div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div>`;
+}
+function buildPdfRenderElement(){
+  const existing=document.getElementById('pdfRenderArea'); if(existing) existing.remove();
+  const d=lastSignatureData;
+  const wrapper=document.createElement('div');
+  wrapper.id='pdfRenderArea';
+  wrapper.className='pdf-render-area';
+  document.body.appendChild(wrapper);
+
+  const createPage=()=>{
+    const page=document.createElement('div');
+    page.className='pdf-render-page';
+    page.style.height='1123px';
+    page.style.minHeight='1123px';
+    page.style.overflow='hidden';
+    page.style.marginBottom='36px';
+    wrapper.appendChild(page);
+    return page;
+  };
+
+  const firstPage=createPage();
+  firstPage.innerHTML=buildPdfMetaPageHtml(d);
+
+  let currentPage=createPage();
+  currentPage.innerHTML='<div class="pdf-section-title">עיקרי ההסכם</div><div class="pdf-contract-text"></div>';
+  let currentText=currentPage.querySelector('.pdf-contract-text');
+  const maxPageHeight=1123;
+  const temp=document.createElement('div');
+  temp.innerHTML=buildContractHtml(d);
+  [...temp.children].forEach((node)=>{
+    const clone=node.cloneNode(true);
+    currentText.appendChild(clone);
+    if(currentPage.scrollHeight > maxPageHeight && currentText.children.length > 1){
+      currentText.removeChild(clone);
+      currentPage=createPage();
+      currentPage.innerHTML='<div class="pdf-contract-text"></div>';
+      currentText=currentPage.querySelector('.pdf-contract-text');
+      currentText.appendChild(clone);
+    }
+  });
+
+  const sigTemp=document.createElement('div');
+  sigTemp.innerHTML=buildPdfSignatureHtml(d);
+  [...sigTemp.children].forEach((node)=>{
+    const clone=node.cloneNode(true);
+    currentPage.appendChild(clone);
+    if(currentPage.scrollHeight > maxPageHeight && currentPage.children.length > 1){
+      currentPage.removeChild(clone);
+      currentPage=createPage();
+      currentPage.appendChild(clone);
+    }
+  });
+  return wrapper;
+}
 function normalizePdfHighlightsForCapture(renderEl){
   if(!renderEl) return;
   renderEl.querySelectorAll('.pdf-contract-text .highlight-value, .pdf-contract-text b, .pdf-contract-text strong').forEach(el=>{
@@ -20,31 +1524,281 @@ function normalizePdfHighlightsForCapture(renderEl){
     el.replaceWith(replacement);
   });
 }
---- REPLACE ---
-function normalizePdfHighlightsForCapture(renderEl){
-  if(!renderEl) return;
 
-  renderEl.querySelectorAll('.pdf-contract-text .highlight-value, .pdf-contract-text b, .pdf-contract-text strong').forEach(el=>{
-    const replacement=document.createElement('span');
-    replacement.textContent=el.textContent || '';
-
-    replacement.style.fontWeight='400';
-    replacement.style.color='#0a355c';
-    replacement.style.fontSize='inherit';
-    replacement.style.fontFamily='Arial, Tahoma, sans-serif';
-    replacement.style.lineHeight='inherit';
-    replacement.style.verticalAlign='baseline';
-    replacement.style.position='static';
-    replacement.style.top='auto';
-    replacement.style.bottom='auto';
-    replacement.style.display='inline';
-    replacement.style.transform='none';
-
-    /* מראה מודגש בלי להשתמש ב-Bold אמיתי, כדי למנוע קפיצה למעלה ב-html2canvas */
-    replacement.style.textShadow='0.35px 0 currentColor, -0.35px 0 currentColor';
-
-    el.replaceWith(replacement);
-  });
+async function createSignedPdf(options={download:true, showPreview:true}){
+  if(!lastSignatureData){ await signContract(); if(!lastSignatureData) return; }
+  showStatus('יוצר PDF ומסדר את החוזה לעמודים ללא חיתוך באמצע...', '');
+  const renderEl=buildPdfRenderElement();
+  normalizePdfHighlightsForCapture(renderEl);
+  await new Promise(r=>setTimeout(r,250));
+  const pages=[...renderEl.querySelectorAll('.pdf-render-page')];
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pageWidth=doc.internal.pageSize.getWidth();
+  const pageHeight=doc.internal.pageSize.getHeight();
+  for(let i=0;i<pages.length;i++){
+    const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794});
+    const imgData=canvas.toDataURL('image/jpeg',.98);
+    if(i>0) doc.addPage();
+    const pdfMarginX=10;
+    const pdfMarginY=10;
+    const imgWidth=pageWidth-(pdfMarginX*2);
+    const imgHeight=imgWidth*(pageHeight/pageWidth);
+    doc.addImage(imgData,'JPEG',pdfMarginX,pdfMarginY,imgWidth,imgHeight);
+  }
+  renderEl.remove();
+  if(lastPdfUrl) URL.revokeObjectURL(lastPdfUrl);
+  const blob=doc.output('blob');
+  lastPdfBlob=blob;
+  lastPdfUrl=URL.createObjectURL(blob);
+  const frame=document.getElementById('pdfFrame');
+  if(options.showPreview){ frame.src=lastPdfUrl; frame.style.display='block'; }
+  else { frame.style.display='none'; }
+  const filename=`signed_contract_${(lastSignatureData.tenantId||'tenant').replace(/\D/g,'')||'tenant'}.pdf`;
+  lastPdfFileName=filename;
+  if(options.download){ const a=document.createElement('a'); a.href=lastPdfUrl; a.download=filename; a.click(); }
+  showStatus(options.download ? 'נוצר PDF חתום. עכשיו אפשר לשלוח למערכת.' : 'מכין את החוזה החתום לשליחה...', 'success');
 }
---- END ---
-SIGNATURE_PATCH>>>
+
+async function shareSignedPdf(){
+  if(!lastPdfBlob){
+    showStatus('קודם צריך ליצור PDF חתום. לחץ/י על "צור PDF חתום" ואז נסה/י לשתף.', 'error');
+    return;
+  }
+  const filename=lastPdfFileName || `signed_contract_${(lastSignatureData?.tenantId||'tenant').replace(/\D/g,'')||'tenant'}.pdf`;
+  const file=new File([lastPdfBlob], filename, {type:'application/pdf'});
+  const text=`חוזה חתום עבור ${lastSignatureData?.tenantName||''} | מזהה חתימה: ${lastSignatureData?.documentHash||''}`;
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({title:'חוזה שכירות חתום', text, files:[file]});
+      showStatus('חלון השיתוף נפתח. בחר/י WhatsApp, Gmail או כל אפליקציה אחרת ושלח/י את ה־PDF לבעל הנכס.', 'success');
+    } else if(navigator.share){
+      await navigator.share({title:'חוזה שכירות חתום', text});
+      showStatus('הדפדפן הזה לא תומך בשיתוף קובץ PDF, אבל פרטי החתימה שותפו כטקסט. את ה־PDF אפשר לשלוח מההורדות בטלפון.', 'error');
+    } else {
+      showStatus('הדפדפן הזה לא תומך בשיתוף ישיר. ה־PDF כבר ירד למכשיר — פתח/י את ההורדות ושתף/י אותו ידנית ב־WhatsApp או במייל.', 'error');
+    }
+  }catch(e){
+    if(e && e.name==='AbortError'){ showStatus('השיתוף בוטל על ידי המשתמש.', ''); return; }
+    showStatus('לא הצלחתי לפתוח שיתוף קבצים בדפדפן הזה. ה־PDF כבר ירד למכשיר ואפשר לשלוח אותו ידנית מההורדות.', 'error');
+  }
+}
+
+async function submitSignedContract(){
+  if(isPreviewMode){ showStatus('זו תצוגה מקדימה בלבד. לא ניתן לשלוח חתימה ממסך זה.', 'error'); return; }
+  try{
+    showStatus('בודק את הפרטים ושולח את החוזה למערכת...', '');
+    await signContract();
+    if(!lastSignatureData) return;
+    await createSignedPdf({download:false, showPreview:false});
+    if(!lastPdfBlob) return;
+    await uploadSignedPdfToSupabase();
+  }catch(e){
+    console.error(e);
+    showStatus('השליחה נכשלה: '+(e?.message || String(e)), 'error');
+  }
+}
+
+async function uploadSignedPdfToSupabase(){
+  if(!lastPdfBlob){
+    await createSignedPdf();
+    if(!lastPdfBlob) return;
+  }
+  const supabaseUrl=(currentBaseData.supabaseUrl || '').trim().replace(/\/$/, '');
+  const supabaseAnonKey=(currentBaseData.supabaseAnonKey || '').trim();
+  const bucket=(currentBaseData.supabaseBucket || 'signed-contracts').trim();
+  const table=(currentBaseData.supabaseTable || 'tenant_signatures').trim();
+  if(!supabaseUrl || !supabaseAnonKey || !bucket || !table){
+    showStatus('לא הוגדרו פרטי Supabase בקישור. חזור לצד המנהל, מלא Project URL, Publishable/Anon Key, Bucket וטבלה, צור קישור חתימה חדש ושלח שוב לשוכר.', 'error');
+    return;
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    showStatus('ספריית Supabase לא נטענה. בדוק שיש אינטרנט וש־GitHub לא חסם טעינת סקריפטים.', 'error');
+    return;
+  }
+  const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const cleanContractNumber=sanitizeContractNumber(lastSignatureData?.contractNumber || currentBaseData?.contractNumber);
+  if(!cleanContractNumber){ showStatus('מספר החוזה חסר או לא תקין ולכן ההעלאה נעצרה. צור קישור חתימה חדש מצד המנהל.', 'error'); return; }
+  lastSignatureData.contractNumber=cleanContractNumber;
+  currentBaseData.contractNumber=cleanContractNumber;
+  // שם הקובץ ב-Supabase חייב להיות ASCII בלבד. השם בעברית נשאר בתוך ה-PDF ובטבלה, לא בנתיב הקובץ.
+  const contractId=((lastSignatureData?.documentHash || crypto.randomUUID()).replace(/[^a-fA-F0-9]/g,'').slice(0,24)) || crypto.randomUUID().replace(/-/g,'').slice(0,24);
+  const tenantIdDigits=(lastSignatureData?.tenantId || '').replace(/\D/g,'').slice(-6) || 'noid';
+  const datePart=new Date().toISOString().slice(0,10);
+  const filename=`signed_contract_tenant_${tenantIdDigits}_${contractId}.pdf`.replace(/[^a-zA-Z0-9_.-]/g,'_');
+  const path=`contracts/${datePart}/${filename}`;
+  showStatus(`מעלה את ה־PDF החתום ל־Supabase. נתיב הקובץ: ${path}`, '');
+  try{
+    const { data: uploadData, error: uploadError } = await client.storage
+      .from(bucket)
+      .upload(path, lastPdfBlob, { contentType:'application/pdf', upsert:true, cacheControl:'3600' });
+    if(uploadError) throw uploadError;
+    const { data: publicData } = client.storage.from(bucket).getPublicUrl(path);
+    lastUploadedPdfUrl=publicData.publicUrl;
+    lastUploadedStoragePath=path;
+
+    const row={
+      contract_number:lastSignatureData?.contractNumber || null,
+      signature_status:'נחתם',
+      person_status:'שוכר פעיל',
+      tenant_name:lastSignatureData?.tenantName || null,
+      tenant_phone:lastSignatureData?.tenantPhone || null,
+      tenant_id:lastSignatureData?.tenantId || null,
+      tenant_email:lastSignatureData?.tenantEmail || null,
+      property_address:lastSignatureData?.propertyAddress || null,
+      building:lastSignatureData?.building || null,
+      apartment:lastSignatureData?.apartment || null,
+      room:lastSignatureData?.room || null,
+      signed_at:lastSignatureData?.signedAtIso || new Date().toISOString(),
+      document_hash:lastSignatureData?.documentHash || null,
+      pdf_url:lastUploadedPdfUrl,
+      storage_bucket:bucket,
+      storage_path:path,
+      signer_user_agent:lastSignatureData?.userAgent || navigator.userAgent,
+      raw_data:{...(lastSignatureData || {}), publicToken: currentBaseData?.publicToken || lastSignatureData?.publicToken || '', pendingSignatureId: currentBaseData?.pendingSignatureId || lastSignatureData?.pendingSignatureId || pendingId || '', pdfUrl: lastUploadedPdfUrl, pdf_url: lastUploadedPdfUrl, storagePath: path, uploadedFromSignerPageAt:new Date().toISOString()}
+    };
+    const pendingId=lastSignatureData?.pendingSignatureId || currentBaseData?.pendingSignatureId;
+    let savedData, saveError;
+    if(pendingId){
+      const result = await client.from(table)
+        .update(row)
+        .eq('id', pendingId)
+        .select('id, created_at, contract_number, signature_status, person_status, tenant_name, tenant_phone, tenant_id, tenant_email, property_address, building, apartment, room, signed_at, document_hash, pdf_url, storage_path')
+        .maybeSingle();
+      savedData=result.data; saveError=result.error;
+      if(!saveError && !savedData){
+        const fallback = await client.from(table)
+          .update(row)
+          .eq('contract_number', cleanContractNumber)
+          .select('id, created_at, contract_number, signature_status, person_status, tenant_name, tenant_phone, tenant_id, tenant_email, property_address, building, apartment, room, signed_at, document_hash, pdf_url, storage_path')
+          .maybeSingle();
+        savedData=fallback.data; saveError=fallback.error;
+      }
+    } else {
+      const result = await client.from(table).insert(row).select().single();
+      savedData=result.data; saveError=result.error;
+    }
+    if(saveError){
+      lastInsertedRow=null;
+      const details=document.getElementById('uploadResultDetails');
+      details.innerHTML=`<div><strong>ה־PDF עלה בהצלחה, אבל עדכון הרשומה בטבלה נכשל.</strong></div><div class="small-note">אם נוצרה רשומת ממתין לחתימה, צריך Policy שמאפשרת UPDATE לטבלת החתימות. אם אין pendingSignatureId, צריך Policy שמאפשרת INSERT.</div><div class="ltr"><a href="${lastUploadedPdfUrl}" target="_blank">${lastUploadedPdfUrl}</a></div><div style="margin-top:8px;"><strong>Pending record ID:</strong></div><div class="ltr">${escapeHtml(pendingId || 'לא קיים')}</div><div style="margin-top:8px;"><strong>Storage path:</strong></div><div class="ltr">${escapeHtml(path)}</div><div style="margin-top:8px;"><strong>שגיאת טבלה:</strong></div><div class="ltr">${escapeHtml(saveError.message || String(saveError))}</div>`;
+      document.getElementById('uploadResultBox').style.display='block';
+      showStatus('ה־PDF עלה ל־Supabase, אבל עדכון הרשומה בטבלה נכשל. אפשר עדיין לשלוח את קישור ה־PDF.', 'error');
+      return;
+    }
+    lastInsertedRow=savedData;
+    const details=document.getElementById('uploadResultDetails');
+    details.innerHTML=`<div><strong>החוזה החתום נשלח ונשמר במערכת.</strong></div><div><strong>מספר חוזה:</strong> ${escapeHtml(lastSignatureData?.contractNumber||'')}</div><div><strong>סטטוס:</strong> ${escapeHtml(lastSignatureData?.signatureStatus||'נחתם')}</div><div><strong>מזהה רשומה:</strong> <span class="ltr">${escapeHtml(pendingId || savedData?.id || '')}</span></div><div class="ltr"><a href="${lastUploadedPdfUrl}" target="_blank">${lastUploadedPdfUrl}</a></div>${buildPdfDownloadButton(lastUploadedPdfUrl)}<div style="margin-top:8px;"><strong>מזהה חתימה:</strong></div><div class="ltr">${escapeHtml(lastSignatureData?.documentHash||'')}</div><div style="margin-top:8px;"><strong>Storage path:</strong></div><div class="ltr">${escapeHtml(path)}</div>`;
+    document.getElementById('uploadResultBox').style.display='block';
+    tryClosePageAfterSuccess(lastUploadedPdfUrl);
+    if(document.getElementById('recordsBox')){
+      try{ renderSignedRecords([savedData]); }catch(ignore){}
+    }
+  }catch(e){
+    console.error('Supabase upload failed:', e);
+    const errMessage = e?.message || e?.error_description || e?.details || e?.hint || JSON.stringify(e, null, 2) || String(e);
+    const errCode = e?.code || e?.statusCode || e?.status || '';
+    const details=document.getElementById('uploadResultDetails');
+    details.innerHTML=`
+      <div><strong>העלאה ל־Supabase נכשלה.</strong></div>
+      <div class="small-note">העתק אליי את פרטי השגיאה שמופיעים כאן. זה יעזור לזהות אם הבעיה היא ב־Key, Bucket, Policy או בטבלה.</div>
+      <div style="margin-top:8px;"><strong>שלב שנכשל:</strong> העלאת PDF ל־Storage</div>
+      <div style="margin-top:8px;"><strong>Supabase URL:</strong></div>
+      <div class="ltr">${escapeHtml(supabaseUrl)}</div>
+      <div style="margin-top:8px;"><strong>Bucket:</strong></div>
+      <div class="ltr">${escapeHtml(bucket)}</div>
+      <div style="margin-top:8px;"><strong>Storage path שניסיתי להעלות אליו:</strong></div>
+      <div class="ltr">${escapeHtml(path)}</div>
+      <div style="margin-top:8px;"><strong>קוד שגיאה:</strong></div>
+      <div class="ltr">${escapeHtml(String(errCode || 'לא התקבל קוד'))}</div>
+      <div style="margin-top:8px;"><strong>הודעת שגיאה:</strong></div>
+      <div class="ltr" style="white-space:pre-wrap;">${escapeHtml(errMessage)}</div>
+    `;
+    document.getElementById('uploadResultBox').style.display='block';
+    showStatus('העלאה ל־Supabase נכשלה. עכשיו מוצגים למטה פרטי השגיאה המדויקים — העתק אותם אליי.', 'error');
+  }
+}
+async function copyUploadedPdfLink(){
+  if(!lastUploadedPdfUrl){ showStatus('עדיין אין קישור PDF. קודם לחץ/י על העלה וקבל קישור PDF.', 'error'); return; }
+  try{ await navigator.clipboard.writeText(lastUploadedPdfUrl); showStatus('קישור ה־PDF הועתק ללוח.', 'success'); }
+  catch(e){ prompt('אפשר להעתיק את הקישור מכאן:', lastUploadedPdfUrl); }
+}
+async function shareUploadedPdfLink(){
+  if(!lastUploadedPdfUrl){ showStatus('עדיין אין קישור PDF. קודם לחץ/י על העלה וקבל קישור PDF.', 'error'); return; }
+  const text=`חוזה שכירות חתום עבור ${lastSignatureData?.tenantName||''}\nקישור PDF: ${lastUploadedPdfUrl}\nמזהה חתימה: ${lastSignatureData?.documentHash||''}`;
+  try{
+    if(navigator.share){ await navigator.share({title:'חוזה שכירות חתום', text}); }
+    else { const phone=(currentBaseData.ownerWhatsapp||'').replace(/\D/g,''); const wa=phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : 'https://wa.me/?text='+encodeURIComponent(text); window.open(wa, '_blank'); }
+    showStatus('נפתח שיתוף/WhatsApp עם קישור ל־PDF החתום.', 'success');
+  }catch(e){
+    if(e && e.name==='AbortError'){ showStatus('השיתוף בוטל על ידי המשתמש.', ''); return; }
+    const phone=(currentBaseData.ownerWhatsapp||'').replace(/\D/g,''); const wa=phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : 'https://wa.me/?text='+encodeURIComponent(text); window.open(wa, '_blank');
+  }
+}
+
+async function copySignatureDetails(){
+  if(!lastSignatureData){
+    showStatus('עדיין אין חתימה שמורה. קודם יש לחתום ולשמור.', 'error');
+    return;
+  }
+  const d=lastSignatureData;
+  const details=`פרטי חתימה על חוזה שכירות\nשם: ${d.tenantName||''}\nטלפון: ${d.tenantPhone||''}\nתעודת זהות: ${d.tenantId||''}\nכתובת מגורים: ${d.homeAddress||''}\nאימייל: ${d.tenantEmail||''}\nכתובת הנכס: ${d.propertyBaseAddress||''}\nפרטי החדר: ${d.roomDetails||''}\nתאריך ושעת חתימה: ${d.signedAt||''}\nמזהה מסמך SHA-256: ${d.documentHash||''}`;
+  try{
+    await navigator.clipboard.writeText(details);
+    showStatus('פרטי החתימה הועתקו ללוח. אפשר להדביק אותם ב־WhatsApp או במייל כגיבוי.', 'success');
+  }catch(e){
+    prompt('לא הצלחתי להעתיק אוטומטית. אפשר להעתיק מכאן ידנית:', details);
+  }
+}
+
+function printContract(){refreshContract(); window.print();}
+function loadSavedSignature(){
+  clearLegacySignatureIfDifferent();
+  const keys=[getSignatureStorageKey(), 'tenantSignatureDemoV17'];
+  const currentContract=getCurrentContractNumber();
+  const currentPending=String(currentBaseData?.pendingSignatureId || '').trim();
+  for(const key of keys){
+    const saved=localStorage.getItem(key);
+    if(!saved) continue;
+    try{
+      const parsed=JSON.parse(saved);
+      const savedContract=sanitizeContractNumber(parsed?.contractNumber);
+      const savedPending=String(parsed?.pendingSignatureId || '').trim();
+      if(currentPending && savedPending && savedPending!==currentPending) continue;
+      if(currentContract && savedContract && savedContract!==currentContract) continue;
+      if(!savedContract) continue;
+      lastSignatureData={...parsed, contractNumber: currentContract || savedContract};
+      renderAudit();
+      return;
+    }catch(e){}
+  }
+  lastSignatureData=null;
+}
+window.addEventListener('resize',()=>{ if(signaturePad && signaturePad.isEmpty()) resizeCanvas(); });
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const isLocal=location.protocol==='file:';
+  const warning=document.getElementById('localWarning');
+  if(warning && isLocal) warning.style.display='block';
+  setVal('publicBaseUrl','https://noam01234.github.io/tenant-signature/');
+  setVal('a_supabaseUrl','https://erhfqlcfwjqehffxetbv.supabase.co');
+  setVal('a_ownerWhatsapp','972545668879');
+  setVal('a_signatureStatus','ממתין לחתימה'); setVal('a_personStatus','מועמד');
+  setVal('a_supabaseBucket', val('a_supabaseBucket') || 'signed-contracts');
+  setVal('a_supabaseTable', val('a_supabaseTable') || 'tenant_signatures');
+  setVal('a_startDate',todayIso()); setVal('a_endDate',addMonths(new Date(),12)); previewAdminContract();
+  adminIds.forEach(id=>{ const el=document.getElementById('a_'+id); if(el) el.addEventListener('input',previewAdminContract); });
+  ['tenantId','homeAddress','tenantEmail'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',refreshContract); });
+  const loaded=await loadDataFromUrl();
+  if(!loaded){
+    setMode('signer');
+    showStatus('הקישור לא תקין או שפג תוקף. יש לבקש מבעל הנכס לשלוח קישור חתימה חדש.', 'error');
+  }
+  if(!document.body.classList.contains('signed-completed')) loadSavedSignature();
+  initSignaturePad();
+});
+</script>
+</body>
+</html>
+
+
+
+
