@@ -83,7 +83,7 @@
     .pdf-contract-text { white-space:normal; font-size:20px; line-height:1.32; }
     .pdf-contract-text p { margin:0 0 5px 0; }
     .pdf-contract-text p.sub-clause, .pdf-contract-text p.standalone-clause { margin-right:30px; padding-right:10px; }
-    .pdf-contract-text .highlight-value { font-size:1.15em; font-weight:800; color:#0a355c; display:inline-block; vertical-align:text-bottom; line-height:1; }
+    .pdf-contract-text .highlight-value { font-size:1em; font-weight:800; color:#0a355c; display:inline; vertical-align:baseline; line-height:inherit; position:relative; top:0; }
     .pdf-contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:10px; font-weight:800; }
     .pdf-contract-text p:last-child { margin-bottom:0; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
@@ -1776,4 +1776,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
