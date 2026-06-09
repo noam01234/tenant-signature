@@ -87,6 +87,9 @@
     .pdf-contract-text .highlight-value { font-size:1em; font-weight:400; color:#0a355c; display:inline; vertical-align:baseline; line-height:inherit; position:static; top:auto; }
     .pdf-contract-text .signature-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:10px; font-weight:800; }
     .pdf-contract-text p:last-child { margin-bottom:0; }
+    .contract-notes-box { margin:12px 0 6px; border:2px solid var(--blue); border-radius:14px; padding:12px 14px; background:#f8fbff; }
+    .contract-notes-box .notes-title { font-weight:800; color:var(--blue-dark); margin-bottom:8px; }
+    .contract-notes-box .notes-content { color:#111827; }
     .pdf-signature { margin-top:18px; border:1px solid var(--border); border-radius:10px; padding:12px; }
     .landlord-signature-box { margin-top:14px; border:1px solid var(--border); border-radius:14px; padding:14px; background:#fbfdff; text-align:center; }
     .landlord-signature-box img { max-width:220px; max-height:90px; object-fit:contain; display:block; margin:6px auto; }
@@ -1261,8 +1264,10 @@ function buildContractHtml(d){
     <p><strong>11. הודעות</strong></p>
     <p class="standalone-clause">הודעה שתישלח בדואר רשום על פי כתובת הצדדים המוצגת במבוא להסכם זה תחשב כאילו הגיעה לצד המשולח בתוך 6 ימים מעת שליחתה בדואר רשום כאילו נמסרה ביד.</p>
 
-    <p><strong>הערות</strong></p>
-    <p class="standalone-clause">${extraTerms}</p>
+    <div class="contract-notes-box pdf-force-new-page">
+      <div class="notes-title">הערות</div>
+    <div class="notes-content">${extraTerms}</div>
+    </div>
 
     <p><strong>ולראיה באו הצדדים על החתום</strong></p>`;
 }
@@ -1459,7 +1464,7 @@ function buildPdfMetaPageHtml(d){
 function buildPdfSignatureHtml(d){
   return `<div class="pdf-section-title">חתימת השוכר</div><div class="pdf-signature"><div><strong>השוכר אישר:</strong> קראתי את החוזה, השלמתי פרטים נכונים, הבנתי את תנאיו ואני מסכים/ה לחתום עליו באופן אלקטרוני.</div><div><strong>תאריך ושעת חתימה:</strong> ${escapeHtml(d.signedAt)}</div><img src="${d.signatureImage}" alt="חתימת השוכר" /></div>
   <div class="pdf-section-title">חתימת המשכיר</div><div class="pdf-landlord-signature"><img src="signature_from_contract_transparent.png" alt="חתימת המשכיר" /></div>
-  <div class="pdf-render-page" style="height:1123px;min-height:1123px;overflow:hidden;margin-bottom:36px;"><div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div></div>`;
+  <div class="pdf-section-title">תיעוד חתימה</div><div class="pdf-audit"><div><strong>שם:</strong> ${escapeHtml(d.tenantName)}</div><div><strong>טלפון:</strong> ${escapeHtml(d.tenantPhone)}</div><div><strong>תעודת זהות:</strong> ${escapeHtml(d.tenantId)}</div><div><strong>מזהה מסמך SHA-256:</strong></div><div class="ltr">${escapeHtml(d.documentHash)}</div><div><strong>דפדפן:</strong></div><div class="ltr">${escapeHtml(d.userAgent)}</div></div>`;
 }
 function buildPdfRenderElement(){
   const existing=document.getElementById('pdfRenderArea'); if(existing) existing.remove();
@@ -1492,7 +1497,7 @@ function buildPdfRenderElement(){
   [...temp.children].forEach((node)=>{
     const clone=node.cloneNode(true);
     currentText.appendChild(clone);
-    if(currentPage.scrollHeight > maxPageHeight && currentText.children.length > 1){
+    if((clone.classList && clone.classList.contains('pdf-force-new-page') && currentText.children.length > 1) || (currentPage.scrollHeight > maxPageHeight && currentText.children.length > 1)){
       currentText.removeChild(clone);
       currentPage=createPage();
       currentPage.innerHTML='<div class="pdf-contract-text"></div>';
@@ -1954,6 +1959,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
