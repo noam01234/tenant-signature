@@ -1665,6 +1665,56 @@ async function submitSignedContract(){
   }
 }
 
+async function sendSignedContractEmailNotification(){
+  try{
+    const supabaseUrl=(currentBaseData.supabaseUrl || '').trim().replace(/\/$/, '');
+    const supabaseAnonKey=(currentBaseData.supabaseAnonKey || '').trim();
+
+    if(!supabaseUrl || !supabaseAnonKey || !lastUploadedPdfUrl || !lastSignatureData){
+      console.warn('דילוג על שליחת מייל: חסרים פרטי Supabase, PDF או נתוני חתימה.');
+      return false;
+    }
+
+    const endpoint=supabaseUrl + '/functions/v1/send-signed-contract-email';
+
+    const payload={
+      tenantName:lastSignatureData.tenantName || '',
+      tenantEmail:lastSignatureData.tenantEmail || '',
+      contractNumber:lastSignatureData.contractNumber || '',
+      pdfUrl:lastUploadedPdfUrl || '',
+      signedAt:lastSignatureData.signedAt || '',
+      tenantPhone:lastSignatureData.tenantPhone || '',
+      tenantId:lastSignatureData.tenantId || '',
+      propertyAddress:lastSignatureData.propertyAddress || currentBaseData.propertyAddress || '',
+      building:lastSignatureData.building || currentBaseData.building || '',
+      apartment:lastSignatureData.apartment || currentBaseData.apartment || '',
+      room:lastSignatureData.room || currentBaseData.room || ''
+    };
+
+    const res=await fetch(endpoint,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':supabaseAnonKey,
+        'Authorization':'Bearer '+supabaseAnonKey
+      },
+      body:JSON.stringify(payload)
+    });
+
+    const result=await res.json().catch(()=>({}));
+
+    if(!res.ok || result.error){
+      console.warn('שליחת מייל חוזה חתום נכשלה:', result);
+      return false;
+    }
+
+    return true;
+  }catch(e){
+    console.warn('שליחת מייל חוזה חתום נכשלה:', e);
+    return false;
+  }
+}
+
 async function uploadSignedPdfToSupabase(){
   if(!lastPdfBlob){
     await createSignedPdf();
@@ -1753,8 +1803,9 @@ async function uploadSignedPdfToSupabase(){
       return;
     }
     lastInsertedRow=savedData;
+    const emailSent=await sendSignedContractEmailNotification();
     const details=document.getElementById('uploadResultDetails');
-    details.innerHTML=`<div><strong>החוזה החתום נשלח ונשמר במערכת.</strong></div><div><strong>מספר חוזה:</strong> ${escapeHtml(lastSignatureData?.contractNumber||'')}</div><div><strong>סטטוס:</strong> ${escapeHtml(lastSignatureData?.signatureStatus||'נחתם')}</div><div><strong>מזהה רשומה:</strong> <span class="ltr">${escapeHtml(pendingId || savedData?.id || '')}</span></div><div class="ltr"><a href="${lastUploadedPdfUrl}" target="_blank">${lastUploadedPdfUrl}</a></div>${buildPdfDownloadButton(lastUploadedPdfUrl)}<div style="margin-top:8px;"><strong>מזהה חתימה:</strong></div><div class="ltr">${escapeHtml(lastSignatureData?.documentHash||'')}</div><div style="margin-top:8px;"><strong>Storage path:</strong></div><div class="ltr">${escapeHtml(path)}</div>`;
+    details.innerHTML=`<div><strong>החוזה החתום נשלח ונשמר במערכת.</strong></div><div><strong>שליחת מייל:</strong> ${emailSent ? 'נשלח בהצלחה' : 'לא נשלח / נכשל, החוזה עדיין נשמר במערכת'}</div><div><strong>מספר חוזה:</strong> ${escapeHtml(lastSignatureData?.contractNumber||'')}</div><div><strong>סטטוס:</strong> ${escapeHtml(lastSignatureData?.signatureStatus||'נחתם')}</div><div><strong>מזהה רשומה:</strong> <span class="ltr">${escapeHtml(pendingId || savedData?.id || '')}</span></div><div class="ltr"><a href="${lastUploadedPdfUrl}" target="_blank">${lastUploadedPdfUrl}</a></div>${buildPdfDownloadButton(lastUploadedPdfUrl)}<div style="margin-top:8px;"><strong>מזהה חתימה:</strong></div><div class="ltr">${escapeHtml(lastSignatureData?.documentHash||'')}</div><div style="margin-top:8px;"><strong>Storage path:</strong></div><div class="ltr">${escapeHtml(path)}</div>`;
     document.getElementById('uploadResultBox').style.display='block';
     tryClosePageAfterSuccess(lastUploadedPdfUrl);
     if(document.getElementById('recordsBox')){
@@ -1865,6 +1916,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
