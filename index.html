@@ -1504,10 +1504,30 @@ function buildPdfRenderElement(){
   });
   return wrapper;
 }
+function normalizePdfHighlightsForCapture(renderEl){
+  if(!renderEl) return;
+  renderEl.querySelectorAll('.pdf-contract-text .highlight-value').forEach(el=>{
+    const replacement=document.createElement('b');
+    replacement.textContent=el.textContent || '';
+    replacement.style.fontWeight='800';
+    replacement.style.color='#0a355c';
+    replacement.style.fontSize='inherit';
+    replacement.style.lineHeight='inherit';
+    replacement.style.verticalAlign='baseline';
+    replacement.style.position='static';
+    replacement.style.top='auto';
+    replacement.style.bottom='auto';
+    replacement.style.display='inline';
+    replacement.style.transform='none';
+    el.replaceWith(replacement);
+  });
+}
+
 async function createSignedPdf(options={download:true, showPreview:true}){
   if(!lastSignatureData){ await signContract(); if(!lastSignatureData) return; }
   showStatus('יוצר PDF ומסדר את החוזה לעמודים ללא חיתוך באמצע...', '');
   const renderEl=buildPdfRenderElement();
+  normalizePdfHighlightsForCapture(renderEl);
   await new Promise(r=>setTimeout(r,250));
   const pages=[...renderEl.querySelectorAll('.pdf-render-page')];
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -1776,5 +1796,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
