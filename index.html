@@ -1804,6 +1804,7 @@ async function uploadSignedPdfToSupabase(){
     }
     lastInsertedRow=savedData;
     const emailSent=await sendSignedContractEmailNotification();
+    hideSigningWaitNotice();
     const details=document.getElementById('uploadResultDetails');
     details.innerHTML=`<div><strong>החוזה החתום נשלח ונשמר במערכת.</strong></div><div><strong>שליחת מייל:</strong> ${emailSent ? 'נשלח בהצלחה' : 'לא נשלח / נכשל, החוזה עדיין נשמר במערכת'}</div><div><strong>מספר חוזה:</strong> ${escapeHtml(lastSignatureData?.contractNumber||'')}</div><div><strong>סטטוס:</strong> ${escapeHtml(lastSignatureData?.signatureStatus||'נחתם')}</div><div><strong>מזהה רשומה:</strong> <span class="ltr">${escapeHtml(pendingId || savedData?.id || '')}</span></div><div class="ltr"><a href="${lastUploadedPdfUrl}" target="_blank">${lastUploadedPdfUrl}</a></div>${buildPdfDownloadButton(lastUploadedPdfUrl)}<div style="margin-top:8px;"><strong>מזהה חתימה:</strong></div><div class="ltr">${escapeHtml(lastSignatureData?.documentHash||'')}</div><div style="margin-top:8px;"><strong>Storage path:</strong></div><div class="ltr">${escapeHtml(path)}</div>`;
     document.getElementById('uploadResultBox').style.display='block';
@@ -1916,6 +1917,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
