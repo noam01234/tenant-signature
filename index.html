@@ -1581,9 +1581,73 @@ async function shareSignedPdf(){
   }
 }
 
+function showSigningWaitNotice(){
+  let existing=document.getElementById('signingWaitOverlay');
+  if(existing) return;
+
+  const overlay=document.createElement('div');
+  overlay.id='signingWaitOverlay';
+  overlay.setAttribute('dir','rtl');
+  overlay.innerHTML=`
+    <div style="
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:rgba(15,23,42,.62);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      font-family:Arial,Tahoma,sans-serif;
+    ">
+      <div style="
+        width:min(520px,100%);
+        background:#ffffff;
+        border-radius:18px;
+        padding:24px;
+        box-shadow:0 16px 44px rgba(0,0,0,.28);
+        border:1px solid #dbeafe;
+        text-align:center;
+        color:#111827;
+        line-height:1.7;
+      ">
+        <div style="font-size:24px;font-weight:800;color:#0a355c;margin-bottom:10px;">החוזה נשלח לעיבוד</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:12px;">
+          נא להמתין מספר רגעים ולא לסגור את הדף.
+        </div>
+        <div style="font-size:15px;color:#374151;">
+          המערכת יוצרת את קובץ ה־PDF החתום ושומרת אותו בענן.
+          לאחר סיום החתימה, כדי לראות או להוריד את החוזה החתום ניתן להיכנס שוב לאותו קישור חתימה.
+        </div>
+        <div style="
+          margin:18px auto 0;
+          width:42px;
+          height:42px;
+          border:5px solid #dbeafe;
+          border-top-color:#0f4c81;
+          border-radius:50%;
+          animation:signingWaitSpin 1s linear infinite;
+        "></div>
+      </div>
+    </div>
+  `;
+
+  const style=document.createElement('style');
+  style.id='signingWaitOverlayStyle';
+  style.textContent='@keyframes signingWaitSpin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+  document.body.appendChild(overlay);
+}
+
+function hideSigningWaitNotice(){
+  const overlay=document.getElementById('signingWaitOverlay');
+  if(overlay) overlay.remove();
+}
+
 async function submitSignedContract(){
   if(isPreviewMode){ showStatus('זו תצוגה מקדימה בלבד. לא ניתן לשלוח חתימה ממסך זה.', 'error'); return; }
   try{
+    showSigningWaitNotice();
     showStatus('בודק את הפרטים ושולח את החוזה למערכת...', '');
     await signContract();
     if(!lastSignatureData) return;
@@ -1592,6 +1656,7 @@ async function submitSignedContract(){
     await uploadSignedPdfToSupabase();
   }catch(e){
     console.error(e);
+    hideSigningWaitNotice();
     showStatus('השליחה נכשלה: '+(e?.message || String(e)), 'error');
   }
 }
@@ -1796,6 +1861,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
