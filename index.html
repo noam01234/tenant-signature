@@ -94,7 +94,7 @@
 
     /* גרסה 34 - הזחת סעיפי משנה ממוספרים */
     .tabs, #adminPanel { display:none !important; }
-    body.signer-only #signerPanel { display:grid !important; }
+    body.signer-only #signerPanel { display:grid !important; grid-template-columns:1fr !important; }
     @media print { body{background:white;} .topbar,.tabs,.card,.btns,.sign-area,.pdf-frame{display:none!important;} .page{padding:0;max-width:none;} .grid{display:block;} .contract-box{box-shadow:none;border:none;} }
     .tabs, #adminPanel { display: none !important; }
 
@@ -1861,6 +1861,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
