@@ -740,6 +740,44 @@ async function applyBaseData(data){
   currentBaseData=data;
   setVal('tenantName',data.tenantName || ''); setVal('tenantPhone',data.tenantPhone || ''); setVal('tenantId',data.tenantId || ''); setVal('homeAddress',data.homeAddress || ''); setVal('tenantEmail',data.tenantEmail || ''); setVal('paymentMethod',data.paymentMethod || ''); setVal('tenantNotes',data.tenantNotes || ''); refreshContract();
 }
+async function updateSignatureOpenTracking(client, table, recordId, row){
+  if(isPreviewMode) return;
+  if(!client || !table || !recordId || !row) return;
+
+  const alreadySigned = Boolean(
+    (row.signature_status === 'נחתם' || row.person_status === 'שוכר פעיל') &&
+    (row.pdf_url || row.signed_at || row.document_hash)
+  );
+
+  if(alreadySigned) return;
+
+  try{
+    const now=new Date().toISOString();
+    const currentCount=Number(row.open_count || 0);
+
+    const updateData={
+      last_opened_at:now,
+      open_count:currentCount + 1,
+      signer_open_user_agent:navigator.userAgent
+    };
+
+    if(!row.opened_at){
+      updateData.opened_at=now;
+    }
+
+    const { error } = await client
+      .from(table)
+      .update(updateData)
+      .eq('id', recordId);
+
+    if(error){
+      console.warn('עדכון מעקב פתיחת חוזה נכשל:', error);
+    }
+  }catch(e){
+    console.warn('עדכון מעקב פתיחת חוזה נכשל:', e);
+  }
+}
+
 async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   const supabaseUrl=(cfg?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co').trim().replace(/\/$/, '');
   const supabaseAnonKey=(cfg?.supabaseAnonKey || '').trim();
@@ -764,6 +802,7 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   return {
     ...raw,
     pendingSignatureId: pendingId,
+    openTrackingUpdated: await updateSignatureOpenTracking(client, table, pendingId, row),
     contractNumber: sanitizeContractNumber(row.contract_number) || sanitizeContractNumber(raw.contractNumber),
     signatureStatus: row.signature_status || raw.signatureStatus || 'ממתין לחתימה',
     personStatus: row.person_status || raw.personStatus || 'מועמד',
@@ -816,6 +855,7 @@ async function fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg){
   return {
     ...raw,
     pendingSignatureId: row.id,
+    openTrackingUpdated: await updateSignatureOpenTracking(client, table, row.id, row),
     publicToken: token,
     contractNumber: sanitizeContractNumber(row.contract_number) || sanitizeContractNumber(raw.contractNumber),
     signatureStatus: row.signature_status || raw.signatureStatus || 'ממתין לחתימה',
@@ -1961,6 +2001,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
