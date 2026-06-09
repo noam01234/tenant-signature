@@ -1506,7 +1506,7 @@ function buildPdfRenderElement(){
 }
 function normalizePdfHighlightsForCapture(renderEl){
   if(!renderEl) return;
-  renderEl.querySelectorAll('.pdf-contract-text .highlight-value, .pdf-contract-text b, .pdf-contract-text strong').forEach(el=>{
+  renderEl.querySelectorAll('.pdf-contract-text .highlight-value').forEach(el=>{
     const replacement=document.createElement('b');
     replacement.textContent=el.textContent || '';
     replacement.style.fontWeight='800';
@@ -1514,12 +1514,10 @@ function normalizePdfHighlightsForCapture(renderEl){
     replacement.style.fontSize='inherit';
     replacement.style.lineHeight='inherit';
     replacement.style.verticalAlign='baseline';
-    replacement.style.display='inline-block';
-    replacement.style.transform='translateY(3px)';
     replacement.style.position='static';
     replacement.style.top='auto';
     replacement.style.bottom='auto';
-    replacement.style.display='inline-block';
+    replacement.style.display='inline';
     replacement.style.transform='none';
     el.replaceWith(replacement);
   });
@@ -1798,7 +1796,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
-
 
 
 
