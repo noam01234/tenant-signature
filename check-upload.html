@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>העלאת צילום צ'ק</title>
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-dark: #1e3a8a;
+      --green: #16a34a;
+      --red: #dc2626;
+      --border: #dbe3ef;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      color: var(--blue-dark);
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #526173;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+
+    input, textarea {
+      border: 1px solid var(--border);
+      padding: 12px;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    button {
+      border: none;
+      padding: 14px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .success {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .secondary {
+      background: #e8eef8;
+      color: var(--blue-dark);
+    }
+
+    .danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .preview {
+      margin-top: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: #fbfdff;
+      display: none;
+    }
+
+    .preview img {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+    }
+
+    .status {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #eef6ff;
+      color: var(--blue-dark);
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .status.error {
+      background: #fff1f2;
+      color: #991b1b;
+    }
+
+    .status.ok {
+      background: #ecfdf5;
+      color: #166534;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #667085;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .settings {
+      margin-top: 18px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <h1>העלאת צילום צ'ק</h1>
+      <div class="hint">
+        הדף מקטין את התמונה לפני העלאה כדי לחסוך נפח אחסון. בשלב זה הצילום נשמר כלא משויך, ואת השיוך לשוכר תבצע אחר כך במערכת הראשית.
+      </div>
+
+      <label for="checkFile">צילום צ'ק</label>
+      <input id="checkFile" type="file" accept="image/*" capture="environment" />
+
+      <label for="note">הערה קצרה, אופציונלי</label>
+      <textarea id="note" placeholder="לדוגמה: צ'ק בטחון שהתקבל היום"></textarea>
+
+      <button class="success" type="button" onclick="uploadCheckImage()">העלה צילום לענן</button>
+
+      <div class="preview" id="previewBox">
+        <div class="small" id="previewInfo"></div>
+        <img id="previewImage" alt="תצוגה מקדימה" />
+      </div>
+
+      <div class="status" id="statusBox"></div>
+
+      <div class="settings">
+        <button class="secondary" type="button" onclick="toggleSettings()">הגדרות Supabase</button>
+
+        <div id="settingsBox" class="hidden">
+          <label for="supabaseUrl">Supabase URL</label>
+          <input id="supabaseUrl" type="text" placeholder="https://xxxx.supabase.co" />
+
+          <label for="supabaseAnonKey">Supabase anon key</label>
+          <input id="supabaseAnonKey" type="password" placeholder="eyJ..." />
+
+          <label for="uploadPin">קוד העלאה מקומי, אופציונלי</label>
+          <input id="uploadPin" type="password" placeholder="אפשר להשאיר ריק בשלב בדיקה" />
+
+          <button class="primary" type="button" onclick="saveSettings()">שמור הגדרות בטלפון</button>
+          <button class="danger" type="button" onclick="clearSettings()">נקה הגדרות</button>
+
+          <div class="small">
+            ההגדרות נשמרות רק בדפדפן של הטלפון הזה. קוד ההעלאה הוא חסימה בסיסית בצד הדף בלבד, לא אבטחה חזקה.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const STORAGE_BUCKET = "check-images";
+    const SETTINGS_KEY = "tsm_check_upload_settings_v168";
+    const MAX_WIDTH = 1400;
+    const JPEG_QUALITY = 0.62;
+
+    let selectedCompressedBlob = null;
+    let selectedOriginalName = "";
+
+    function showStatus(message, type) {
+      const box = document.getElementById("statusBox");
+      box.textContent = message || "";
+      box.className = "status" + (type ? " " + type : "");
+      box.style.display = message ? "block" : "none";
+    }
+
+    function toggleSettings() {
+      document.getElementById("settingsBox").classList.toggle("hidden");
+    }
+
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function applySettingsToForm() {
+      const s = loadSettings();
+      document.getElementById("supabaseUrl").value = s.supabaseUrl || "";
+      document.getElementById("supabaseAnonKey").value = s.supabaseAnonKey || "";
+      document.getElementById("uploadPin").value = s.uploadPin || "";
+    }
+
+    function saveSettings() {
+      const settings = {
+        supabaseUrl: document.getElementById("supabaseUrl").value.trim(),
+        supabaseAnonKey: document.getElementById("supabaseAnonKey").value.trim(),
+        uploadPin: document.getElementById("uploadPin").value.trim()
+      };
+
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      showStatus("ההגדרות נשמרו בטלפון.", "ok");
+    }
+
+    function clearSettings() {
+      localStorage.removeItem(SETTINGS_KEY);
+      applySettingsToForm();
+      showStatus("ההגדרות נמחקו מהטלפון.", "ok");
+    }
+
+    function getSupabaseClient() {
+      const s = loadSettings();
+      if (!s.supabaseUrl || !s.supabaseAnonKey) {
+        throw new Error("חסרות הגדרות Supabase. פתח הגדרות והזן Supabase URL ו-anon key.");
+      }
+
+      return window.supabase.createClient(s.supabaseUrl, s.supabaseAnonKey);
+    }
+
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("לא ניתן לקרוא את התמונה."));
+        };
+
+        img.src = url;
+      });
+    }
+
+    async function compressImage(file) {
+      const img = await fileToImage(file);
+
+      const scale = Math.min(1, MAX_WIDTH / Math.max(img.width, img.height));
+      const targetWidth = Math.round(img.width * scale);
+      const targetHeight = Math.round(img.height * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+      const blob = await new Promise(resolve => {
+        canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY);
+      });
+
+      if (!blob) {
+        throw new Error("כיווץ התמונה נכשל.");
+      }
+
+      return {
+        blob,
+        width: targetWidth,
+        height: targetHeight
+      };
+    }
+
+    function formatKb(bytes) {
+      return Math.round((bytes || 0) / 1024);
+    }
+
+    document.getElementById("checkFile").addEventListener("change", async function () {
+      try {
+        showStatus("", "");
+        selectedCompressedBlob = null;
+
+        const file = this.files && this.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+          throw new Error("יש לבחור קובץ תמונה בלבד.");
+        }
+
+        selectedOriginalName = file.name || "check-image.jpg";
+
+        showStatus("מכווץ תמונה...", "");
+
+        const compressed = await compressImage(file);
+        selectedCompressedBlob = compressed.blob;
+
+        const previewUrl = URL.createObjectURL(compressed.blob);
+        document.getElementById("previewImage").src = previewUrl;
+        document.getElementById("previewInfo").textContent =
+          "גודל מקורי: " + formatKb(file.size) + "KB | לאחר כיווץ: " + formatKb(compressed.blob.size) + "KB | מידות: " + compressed.width + "×" + compressed.height;
+
+        document.getElementById("previewBox").style.display = "block";
+
+        showStatus("התמונה מוכנה להעלאה.", "ok");
+      } catch (error) {
+        showStatus(error.message || String(error), "error");
+      }
+    });
+
+    async function uploadCheckImage() {
+      try {
+        showStatus("", "");
+
+        const settings = loadSettings();
+
+        if (settings.uploadPin) {
+          const pin = prompt("הזן קוד העלאה");
+          if (pin !== settings.uploadPin) {
+            throw new Error("קוד העלאה שגוי.");
+          }
+        }
+
+        if (!selectedCompressedBlob) {
+          throw new Error("בחר או צלם תמונה לפני העלאה.");
+        }
+
+        const client = getSupabaseClient();
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const randomPart = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+
+        const path = `${yyyy}/${mm}/${dd}/check_${randomPart}.jpg`;
+
+        showStatus("מעלה צילום ל-Supabase Storage...", "");
+
+        const uploadResult = await client.storage
+          .from(STORAGE_BUCKET)
+          .upload(path, selectedCompressedBlob, {
+            contentType: "image/jpeg",
+            upsert: false
+          });
+
+        if (uploadResult.error) {
+          throw uploadResult.error;
+        }
+
+        showStatus("שומר רשומה בטבלת check_uploads...", "");
+
+        const note = document.getElementById("note").value.trim();
+
+        const insertResult = await client
+          .from("check_uploads")
+          .insert({
+            image_path: path,
+            original_filename: selectedOriginalName || "",
+            compressed_size_kb: formatKb(selectedCompressedBlob.size),
+            note: note || null,
+            status: "unassigned",
+            check_status: "active"
+          })
+          .select("id")
+          .single();
+
+        if (insertResult.error) {
+          throw insertResult.error;
+        }
+
+        showStatus(
+          "הצילום הועלה בהצלחה.\n\nמזהה רשומה:\n" + insertResult.data.id + "\n\nאפשר לשייך אותו אחר כך במערכת הראשית.",
+          "ok"
+        );
+
+        document.getElementById("checkFile").value = "";
+        document.getElementById("note").value = "";
+        selectedCompressedBlob = null;
+        selectedOriginalName = "";
+      } catch (error) {
+        showStatus(error.message || String(error), "error");
+      }
+    }
+
+    applySettingsToForm();
+  </script>
+</body>
+</html>
