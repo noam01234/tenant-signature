@@ -547,6 +547,7 @@ async function createPendingSignatureRecord(data){
   const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
   const row={
     contract_number:data.contractNumber || null,
+    public_token:data.publicToken || null,
     signature_status:'ממתין לחתימה',
     person_status:'מועמד',
     tenant_name:data.tenantName || null,
@@ -563,7 +564,7 @@ async function createPendingSignatureRecord(data){
     storage_bucket:(data.supabaseBucket || 'signed-contracts').trim(),
     storage_path:null,
     signer_user_agent:navigator.userAgent,
-    raw_data:{...data, pendingCreatedAt:new Date().toISOString(), note:'נוצר קישור חתימה. ממתין לחתימת השוכר.'}
+    raw_data:{...data, publicToken:data.publicToken || '', pendingCreatedAt:new Date().toISOString(), note:'נוצר קישור חתימה. ממתין לחתימת השוכר.'}
   };
   const { data: inserted, error } = await client.from(table).insert(row).select('id, created_at, contract_number, signature_status, person_status').single();
   if(error) throw error;
@@ -798,6 +799,10 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   if(error) throw error;
   if(!row) return null;
 
+  await updateSignatureOpenTracking(client, table, row.id, row);
+  const mapped = mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client);
+  mapped.openTrackingUpdated = true;
+  return mapped;
   const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
   return {
     ...raw,
@@ -830,6 +835,43 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
   };
 }
 
+function mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client){
+  await updateSignatureOpenTracking(client, table, row.id, row);
+  const mapped = mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client);
+  mapped.openTrackingUpdated = true;
+  return mapped;
+  const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
+  return {
+    ...raw,
+    pendingSignatureId: row.id,
+    openTrackingUpdated: false,
+    publicToken: token || row.public_token || raw.publicToken || '',
+    contractNumber: sanitizeContractNumber(row.contract_number) || sanitizeContractNumber(raw.contractNumber),
+    signatureStatus: row.signature_status || raw.signatureStatus || 'ממתין לחתימה',
+    personStatus: row.person_status || raw.personStatus || 'מועמד',
+    tenantName: row.tenant_name || raw.tenantName || '',
+    tenantPhone: row.tenant_phone || raw.tenantPhone || '',
+    tenantId: row.tenant_id || raw.tenantId || '',
+    tenantEmail: row.tenant_email || raw.tenantEmail || '',
+    propertyAddress: row.property_address || raw.propertyAddress || '',
+    building: row.building || raw.building || '',
+    apartment: row.apartment || raw.apartment || '',
+    room: row.room || raw.room || '',
+    roomDetails: raw.roomDetails || buildRoomDetails(row.apartment || raw.apartment || '', row.room || raw.room || ''),
+    apartmentIntro: raw.apartmentIntro || '',
+    signedAt: row.signed_at || raw.signedAtIso || raw.signedAt || '',
+    documentHash: row.document_hash || raw.documentHash || '',
+    pdfUrl: row.pdf_url || raw.pdfUrl || raw.pdf_url || '',
+    storagePath: row.storage_path || raw.storagePath || '',
+    signerUserAgent: row.signer_user_agent || raw.userAgent || '',
+    rawData: raw,
+    isAlreadySigned: Boolean((row.signature_status === 'נחתם' || row.person_status === 'שוכר פעיל') && (row.pdf_url || row.signed_at || row.document_hash)),
+    supabaseUrl,
+    supabaseAnonKey,
+    supabaseBucket: bucket,
+    supabaseTable: table
+  };
+}
 async function fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg){
   const token=String(publicToken || '').trim();
   const supabaseUrl=(cfg?.supabaseUrl || 'https://erhfqlcfwjqehffxetbv.supabase.co').trim().replace(/\/$/, '');
@@ -842,15 +884,53 @@ async function fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg){
   }
 
   const client=window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-  const { data: row, error } = await client
-    .from(table)
-    .select('*')
-    .eq('raw_data->>publicToken', token)
-    .maybeSingle();
 
-  if(error) throw error;
+  let row=null;
+  let directError=null;
+
+  try{
+    const rpcResult = await client
+      .rpc('tsm_get_signature_by_public_token', { p_public_token: token });
+
+    if(rpcResult.error) throw rpcResult.error;
+
+    if(Array.isArray(rpcResult.data)){
+      row = rpcResult.data[0] || null;
+    } else {
+      row = rpcResult.data || null;
+    }
+  }catch(rpcError){
+    console.warn('Token RPC lookup failed, falling back to direct select:', rpcError);
+  }
+
+  if(!row){
+    const directResult = await client
+      .from(table)
+      .select('*')
+      .eq('public_token', token)
+      .maybeSingle();
+
+    row = directResult.data || null;
+    directError = directResult.error || null;
+  }
+
+  if(!directError && !row){
+    const fallback = await client
+      .from(table)
+      .select('*')
+      .eq('raw_data->>publicToken', token)
+      .maybeSingle();
+    if(fallback.error) throw fallback.error;
+    if(fallback.data) return mapPendingSignatureRowFromSupabase(fallback.data, token, supabaseUrl, supabaseAnonKey, bucket, table, client);
+  }
+
+  if(directError) throw directError;
   if(!row) return null;
 
+  await updateSignatureOpenTracking(client, table, row.id, row);
+  const mapped = mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client);
+  mapped.openTrackingUpdated = true;
+  return mapped;
   const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
   return {
     ...raw,
@@ -1854,6 +1934,7 @@ async function uploadSignedPdfToSupabase(){
 
     const row={
       contract_number:lastSignatureData?.contractNumber || null,
+      public_token:currentBaseData?.publicToken || lastSignatureData?.publicToken || null,
       signature_status:'נחתם',
       person_status:'שוכר פעיל',
       tenant_name:lastSignatureData?.tenantName || null,
@@ -2017,6 +2098,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
+
 
 
 
