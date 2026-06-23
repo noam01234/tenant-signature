@@ -836,10 +836,6 @@ async function fetchPendingSignatureDataFromSupabase(pendingId, cfg){
 }
 
 function mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client){
-  await updateSignatureOpenTracking(client, table, row.id, row);
-  const mapped = mapPendingSignatureRowFromSupabase(row, token, supabaseUrl, supabaseAnonKey, bucket, table, client);
-  mapped.openTrackingUpdated = true;
-  return mapped;
   const raw=(row.raw_data && typeof row.raw_data === 'object') ? row.raw_data : {};
   return {
     ...raw,
@@ -2099,6 +2095,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
