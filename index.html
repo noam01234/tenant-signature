@@ -888,30 +888,31 @@ async function fetchPendingSignatureDataFromSupabaseByToken(publicToken, cfg){
   let row=null;
   let directError=null;
 
-  try{
-    const rpcResult = await client
-      .rpc('tsm_get_signature_by_public_token', { p_public_token: token });
+  const directResult = await client
+    .from(table)
+    .select('*')
+    .eq('public_token', token)
+    .maybeSingle();
 
-    if(rpcResult.error) throw rpcResult.error;
+  row = directResult.data || null;
+  directError = directResult.error || null;
 
-    if(Array.isArray(rpcResult.data)){
-      row = rpcResult.data[0] || null;
-    } else {
-      row = rpcResult.data || null;
+  if(directError || !row){
+    try{
+      const rpcResult = await client
+        .rpc('tsm_get_signature_by_public_token', { p_public_token: token });
+
+      if(!rpcResult.error){
+        if(Array.isArray(rpcResult.data)){
+          row = rpcResult.data[0] || row;
+        } else {
+          row = rpcResult.data || row;
+        }
+        directError = null;
+      }
+    }catch(rpcError){
+      console.warn('Token RPC lookup failed after direct select:', rpcError);
     }
-  }catch(rpcError){
-    console.warn('Token RPC lookup failed, falling back to direct select:', rpcError);
-  }
-
-  if(!row){
-    const directResult = await client
-      .from(table)
-      .select('*')
-      .eq('public_token', token)
-      .maybeSingle();
-
-    row = directResult.data || null;
-    directError = directResult.error || null;
   }
 
   if(!directError && !row){
@@ -2098,6 +2099,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
