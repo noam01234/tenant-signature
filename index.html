@@ -1918,25 +1918,23 @@ async function uploadSignedPdfToSupabase(){
       raw_data:{...(lastSignatureData || {}), publicToken: currentBaseData?.publicToken || lastSignatureData?.publicToken || '', pendingSignatureId: currentBaseData?.pendingSignatureId || lastSignatureData?.pendingSignatureId || pendingId || '', pdfUrl: lastUploadedPdfUrl, pdf_url: lastUploadedPdfUrl, storagePath: path, uploadedFromSignerPageAt:new Date().toISOString()}
     };
     const pendingId=lastSignatureData?.pendingSignatureId || currentBaseData?.pendingSignatureId;
+    const publicToken=String(currentBaseData?.publicToken || lastSignatureData?.publicToken || row.public_token || '').trim();
     let savedData, saveError;
-    if(pendingId){
-      const result = await client.from(table)
-        .update(row)
-        .eq('id', pendingId)
-        .select('id, created_at, contract_number, signature_status, person_status, tenant_name, tenant_phone, tenant_id, tenant_email, property_address, building, apartment, room, signed_at, document_hash, pdf_url, storage_path')
-        .maybeSingle();
-      savedData=result.data; saveError=result.error;
-      if(!saveError && !savedData){
-        const fallback = await client.from(table)
-          .update(row)
-          .eq('contract_number', cleanContractNumber)
-          .select('id, created_at, contract_number, signature_status, person_status, tenant_name, tenant_phone, tenant_id, tenant_email, property_address, building, apartment, room, signed_at, document_hash, pdf_url, storage_path')
-          .maybeSingle();
-        savedData=fallback.data; saveError=fallback.error;
-      }
+
+    if(!publicToken){
+      saveError = new Error('Missing public token. Cannot save signature by RPC.');
     } else {
-      const result = await client.from(table).insert(row).select().single();
-      savedData=result.data; saveError=result.error;
+      const result = await client.rpc('tsm_save_signature_by_public_token', {
+        p_public_token: publicToken,
+        p_signature_data: row
+      });
+
+      savedData = Array.isArray(result.data) ? (result.data[0] || null) : (result.data || null);
+      saveError = result.error || null;
+
+      if(!saveError && !savedData){
+        saveError = new Error('No tenant_signatures row was updated for this public token.');
+      }
     }
     if(saveError){
       lastInsertedRow=null;
@@ -2062,6 +2060,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
 
 
 
